@@ -1,60 +1,66 @@
 import { Chapter } from './types';
 
 export const CURRICULUM: Chapter[] = [
-  { 
-    id: 'setup', 
-    title: 'Setup & Configuration', 
+  {
+    id: 'setup',
+    title: 'Setup & Configuration',
     description: 'Configure your OpenRouter API key to enable live demos.',
-    type: 'config' 
+    type: 'config'
   },
-  { 
-    id: 'basics', 
-    title: '1. Basic Capabilities', 
+  {
+    id: 'basics',
+    title: '1. Basic Capabilities',
     description: 'Compare raw model outputs across different open and closed-weight models.',
-    type: 'interactive' 
+    type: 'interactive'
   },
-  { 
-    id: 'scaffolds', 
-    title: '2. Scaffolds & Harnesses', 
+  {
+    id: 'scaffolds',
+    title: '2. Scaffolds & Harnesses',
     description: 'Understanding how IDE forks like Cursor and Windsurf integrate AI into the editor.',
-    type: 'informational' 
+    type: 'interactive'
   },
-  { 
-    id: 'tools', 
-    title: '3. Tool Calling & Search', 
+  {
+    id: 'tools',
+    title: '3. Tool Calling & Search',
     description: 'How models interact with the outside world using tools and web search.',
-    type: 'interactive' 
+    type: 'interactive'
   },
-  { 
-    id: 'mcps', 
-    title: '4. Model Context Protocol (MCP)', 
+  {
+    id: 'mcps',
+    title: '4. Model Context Protocol (MCP)',
     description: 'Standardizing how models access context and local resources.',
-    type: 'informational' 
+    type: 'interactive'
   },
-  { 
-    id: 'agents', 
-    title: '5. Agents & Skills', 
-    description: 'Moving from single prompts to autonomous task execution.',
-    type: 'interactive' 
+  {
+    id: 'skills',
+    title: '5. Skills',
+    description: 'Reusable SKILL.md files that teach agents domain-specific expertise and project conventions.',
+    type: 'interactive'
   },
-  { 
-    id: 'cli', 
-    title: '6. The CLI Renaissance', 
+  {
+    id: 'agents-md',
+    title: '6. Agents & AGENTS.md',
+    description: 'The open standard for briefing AI coding agents on your project — build commands, conventions, and boundaries.',
+    type: 'interactive'
+  },
+  {
+    id: 'cli',
+    title: '7. The CLI Renaissance',
     description: 'Terminal-native AI tools and browser-use automation.',
-    type: 'interactive' 
+    type: 'interactive'
   },
-  { 
-    id: 'multi-agent', 
-    title: '7. Multi-Agent Platforms', 
+  {
+    id: 'multi-agent',
+    title: '8. Multi-Agent Platforms',
     description: 'Orchestrating multiple specialized agents to solve complex problems.',
-    type: 'interactive' 
+    type: 'interactive'
   },
 ];
 
 export const POPULAR_MODELS = [
-  { id: 'openai/gpt-4o', name: 'GPT-4o', provider: 'OpenAI' },
-  { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic' },
-  { id: 'meta-llama/llama-3.3-70b-instruct', name: 'Llama 3.3 70B', provider: 'Meta' },
-  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google' },
-  { id: 'deepseek/deepseek-coder', name: 'DeepSeek Coder', provider: 'DeepSeek' },
+  { id: 'openai/gpt-4o',                          name: 'GPT-4o',           provider: 'OpenAI'    },
+  { id: 'anthropic/claude-3.5-sonnet',            name: 'Claude 3.5 Sonnet', provider: 'Anthropic' },
+  { id: 'meta-llama/llama-3.3-70b-instruct',      name: 'Llama 3.3 70B',    provider: 'Meta'      },
+  { id: 'google/gemini-2.5-pro',                  name: 'Gemini 2.5 Pro',   provider: 'Google'    },
+  { id: 'deepseek/deepseek-coder',                name: 'DeepSeek Coder',   provider: 'DeepSeek'  },
 ];

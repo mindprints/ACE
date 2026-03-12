@@ -1,54 +1,45 @@
-# 🚀 AI Coding Evolution Course
+# 🤖 AI Agent Patterns & Skills Demo
 
-An interactive, chronological web application designed to teach developers how AI-assisted coding has evolved—from basic chat interfaces to autonomous multi-agent systems. 
+A comprehensive React application demonstrating advanced AI agent capabilities, including project-specific skills (`AGENTS.md`), Retrieval-Augmented Generation (RAG) for codebases, and natural language CLI execution.
 
-This project serves as both an educational curriculum and a live playground. By connecting your own OpenRouter API key, you can interact with live AI models directly within the course modules to see these concepts in action.
+This project serves as a playground and educational tool for understanding how to ground Large Language Models (LLMs) in specific project contexts to produce more accurate, secure, and idiomatic code.
 
-## ✨ Features & Curriculum
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
 
-The course is divided into 7 chronological modules:
+## ✨ Core Features
 
-### 1. Setup & Configuration
-A secure, local-only configuration module. Your OpenRouter API key is stored exclusively in your browser's `localStorage` to power the live demos without routing through a backend server.
+### 1. AI Agent Skills & `AGENTS.md` (`/src/components/Agents.tsx`)
+Demonstrates the concept of injecting project-specific conventions into AI agents.
+- **Interactive `AGENTS.md` Editor:** Edit the project's AI onboarding guide in real-time and see how it alters the agent's behavior.
+- **Skill Matching:** Automatically detects required skills (e.g., `react-component`, `api-service`) based on the user's prompt.
+- **Side-by-Side Comparison:** Compare the output of a "Vanilla" AI agent against a "Context-Aware" agent loaded with your specific project rules.
 
-### 2. Basic Capabilities (Interactive)
-A side-by-side chat interface allowing you to compare raw model outputs (e.g., GPT-4o vs. Claude 3.5 Sonnet vs. Llama 3). Understand baseline reasoning, coding styles, and speed differences between top-tier LLMs.
+### 2. Code Scaffolding & RAG (`/src/components/Scaffolds.tsx`)
+Shows how Retrieval-Augmented Generation (RAG) can dramatically improve AI code generation by providing existing codebase context.
+- **Simulated Codebase:** A mock file system containing standard project files (utils, hooks, API clients).
+- **BM25 Semantic Search:** Implements a keyword-based retrieval algorithm to find the most relevant code snippets for a given prompt.
+- **Contextual Generation:** The AI uses the retrieved snippets to generate code that perfectly matches the existing project architecture.
 
-### 3. Scaffolds & Harnesses (Informational)
-Learn how modern AI IDEs (like Cursor and Windsurf) bridge the context gap. This module explains Codebase Indexing (RAG), Editor Context injection, and Fast Apply/Diffing mechanisms that turn chatbots into pair programmers.
-
-### 4. Tool Calling & Search (Interactive)
-Watch models break out of their frozen training data. This interactive chat demonstrates how models formulate JSON requests to execute external functions (mocked as `get_weather` and `get_stock_price`) to gather real-time data before answering.
-
-### 5. Model Context Protocol / MCP (Informational)
-Understand the "USB-C for AI." This module breaks down Anthropic's open standard (MCP) that solves the N-to-N integration nightmare, standardizing how AI models (Clients) request information from local data sources (Servers) using Resources, Tools, and Prompts.
-
-### 6. The CLI Renaissance (Interactive)
-A terminal-native AI experience. Type natural language commands (e.g., *"Find all TODOs in the src folder"*) and watch the AI translate your intent into a sequence of bash commands, simulating execution in a mock terminal UI.
-
-### 7. Multi-Agent Platforms (Interactive)
-Step into the future of AI orchestration. Give a complex goal to the system and watch a **Coder Agent** write the initial implementation, followed immediately by a **Reviewer Agent** that critiques the code for security/performance and provides a refactored final version.
-
-## 🛠️ Tech Stack
-
-* **Frontend Framework:** React 18 with TypeScript
-* **Build Tool:** Vite
-* **Styling:** Tailwind CSS
-* **Icons:** Lucide React
-* **Markdown Rendering:** `react-markdown`
-* **AI Integration:** OpenRouter API (OpenAI-compatible endpoints)
+### 3. AI-Powered CLI (`/src/components/CLI.tsx`)
+An experimental natural language terminal interface.
+- **Command Planning:** The agent receives a natural language request, analyzes the simulated environment, and plans a sequence of bash commands.
+- **Simulated Execution:** Executes the planned commands in a mock terminal environment, providing realistic stdout/stderr feedback.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-To use the interactive features, you will need an API key from [OpenRouter](https://openrouter.ai/). OpenRouter acts as a unified router, allowing you to access models from OpenAI, Anthropic, Meta, Google, and more through a single API.
+- Node.js (v18 or higher recommended)
+- npm or yarn
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/ai-coding-evolution.git
-   cd ai-coding-evolution
+   git clone <repository-url>
+   cd <repository-directory>
    ```
 
 2. Install dependencies:
@@ -61,43 +52,28 @@ To use the interactive features, you will need an API key from [OpenRouter](http
    npm run dev
    ```
 
-4. Open your browser and navigate to `http://localhost:3000` (or the port provided by Vite).
+### Configuration
+This application uses the **OpenRouter API** to interact with LLMs. 
+- You will need an OpenRouter API key.
+- The application expects the key to be stored in your browser's `localStorage` under the key `openrouter_api_key`. The UI typically prompts for this when you attempt to run an AI task.
 
-5. Navigate to the **Setup** tab in the application and paste your OpenRouter API key to activate the interactive modules.
+## 🧠 Concepts Explained
 
-## 📁 Project Structure
+### What is `AGENTS.md`?
+Just as `README.md` is for human developers, `AGENTS.md` is an onboarding file specifically designed for AI coding assistants (like GitHub Copilot, Cursor, or custom agents). It defines:
+- **Project Architecture:** Where things live.
+- **Coding Conventions:** Naming, styling, and state management rules.
+- **Boundaries:** What the AI should *never* do (e.g., "Never modify the authentication flow without explicit permission").
 
-```text
-src/
-├── components/
-│   ├── Agents.tsx          # Module 5: Autonomous Agent Loop
-│   ├── CLI.tsx             # Module 6: Terminal Emulator & NL-to-Bash
-│   ├── Layout.tsx          # Main application shell and sidebar
-│   ├── MCP.tsx             # Module 4: Model Context Protocol info
-│   ├── ModelComparison.tsx # Module 2: Side-by-side LLM chat
-│   ├── MultiAgent.tsx      # Module 7: Coder/Reviewer orchestration
-│   ├── Scaffolds.tsx       # Module 3: IDE context info
-│   ├── Setup.tsx           # Module 1: API Key configuration
-│   └── ToolCalling.tsx     # Module 4: Interactive tool execution
-├── services/
-│   └── openRouter.ts       # API client for OpenRouter communication
-├── App.tsx                 # Root component and routing logic
-├── constants.ts            # Curriculum data and model lists
-├── index.css               # Global Tailwind styles
-└── main.tsx                # React entry point
-```
+### Why RAG for Code?
+Standard LLMs are trained on public data up to a certain cutoff date. They don't know about *your* specific internal utility functions, custom React hooks, or database schemas. By using RAG, we search your codebase for relevant files and inject them into the LLM's prompt, ensuring the generated code uses your existing tools rather than hallucinating new ones.
 
-## 🔒 Security & Privacy
-
-This application is designed to be completely client-side. 
-* Your API key is **never** sent to our servers. It is stored in your browser's `localStorage`.
-* All API requests are made directly from your browser to OpenRouter's API.
-* You can clear your API key at any time by clicking "Clear Saved Key" in the Setup module or clearing your browser data.
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the issues page if you want to contribute.
+## 🛠️ Tech Stack
+- **Frontend:** React 18, TypeScript, Vite
+- **Styling:** Tailwind CSS
+- **Icons:** Lucide React
+- **Markdown Rendering:** React Markdown
+- **AI Integration:** OpenRouter API (supports models like Claude 3.5 Sonnet, GPT-4o, etc.)
 
 ## 📝 License
-
-This project is licensed under the MIT License.
+This project is open-source and available under the MIT License.
