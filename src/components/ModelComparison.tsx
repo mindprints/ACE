@@ -3,9 +3,11 @@ import { POPULAR_MODELS } from '../constants';
 import { fetchOpenRouterChat } from '../services/openRouter';
 import { Play, Loader2, AlertCircle } from 'lucide-react';
 import Markdown from 'react-markdown';
+import { useContentPack } from '../context/ContentPackContext';
 
 export function ModelComparison() {
-  const [prompt, setPrompt] = useState('Write a Python function to calculate the Fibonacci sequence using memoization.');
+  const { pack } = useContentPack();
+  const [prompt, setPrompt] = useState(pack.modelComparison.defaultPrompt);
   const [model1, setModel1] = useState(POPULAR_MODELS[0].id);
   const [model2, setModel2] = useState(POPULAR_MODELS[1].id);
   

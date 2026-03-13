@@ -1,192 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { LayoutTemplate, Database, Code2, Zap, ArrowRight, Search, Loader2, FileCode2, ChevronDown, ChevronUp, Sparkles, AlertCircle, BookOpen } from 'lucide-react';
 import { fetchOpenRouterChatFull } from '../services/openRouter';
 import { cn } from './Layout';
 import Markdown from 'react-markdown';
+import { useContentPack } from '../context/ContentPackContext';
+import type { MockFile } from '../data/contentPack';
 
-// ─── Fake Codebase ────────────────────────────────────────────────────────────
-
-const CODEBASE: { filename: string; language: string; content: string }[] = [
-  {
-    filename: 'src/auth/session.ts',
-    language: 'typescript',
-    content: `import { db } from '../db/client';
-import { randomBytes } from 'crypto';
-
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-export async function createSession(userId: string): Promise<string> {
-  const token = randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
-  await db.query(
-    'INSERT INTO sessions (user_id, token, expires_at) VALUES ($1, $2, $3)',
-    [userId, token, expiresAt]
-  );
-  return token;
-}
-
-export async function validateSession(token: string): Promise<string | null> {
-  const result = await db.query(
-    'SELECT user_id FROM sessions WHERE token = $1 AND expires_at > NOW()',
-    [token]
-  );
-  return result.rows[0]?.user_id ?? null;
-}
-
-export async function revokeSession(token: string): Promise<void> {
-  await db.query('DELETE FROM sessions WHERE token = $1', [token]);
-}`,
-  },
-  {
-    filename: 'src/auth/login.ts',
-    language: 'typescript',
-    content: `import bcrypt from 'bcrypt';
-import { db } from '../db/client';
-import { createSession } from './session';
-
-export interface LoginResult {
-  success: boolean;
-  token?: string;
-  error?: string;
-}
-
-export async function login(email: string, password: string): Promise<LoginResult> {
-  const user = await db.query(
-    'SELECT id, password_hash FROM users WHERE email = $1',
-    [email]
-  );
-  if (!user.rows[0]) {
-    return { success: false, error: 'Invalid email or password' };
-  }
-  const valid = await bcrypt.compare(password, user.rows[0].password_hash);
-  if (!valid) {
-    return { success: false, error: 'Invalid email or password' };
-  }
-  const token = await createSession(user.rows[0].id);
-  return { success: true, token };
-}
-
-export async function logout(token: string): Promise<void> {
-  await revokeSession(token);
-}`,
-  },
-  {
-    filename: 'src/db/client.ts',
-    language: 'typescript',
-    content: `import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
-
-pool.on('error', (err) => {
-  console.error('Unexpected DB error', err);
-  process.exit(-1);
-});
-
-export const db = {
-  query: (text: string, params?: any[]) => pool.query(text, params),
-  getClient: () => pool.connect(),
-};`,
-  },
-  {
-    filename: 'src/api/routes/users.ts',
-    language: 'typescript',
-    content: `import { Router } from 'express';
-import { login, logout } from '../../auth/login';
-import { validateSession } from '../../auth/session';
-
-export const userRouter = Router();
-
-userRouter.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-  const result = await login(email, password);
-  if (!result.success) {
-    return res.status(401).json({ error: result.error });
-  }
-  res.cookie('session', result.token!, { httpOnly: true, secure: true, sameSite: 'strict' });
-  res.json({ success: true });
-});
-
-userRouter.post('/logout', async (req, res) => {
-  const token = req.cookies.session;
-  if (token) await logout(token);
-  res.clearCookie('session');
-  res.json({ success: true });
-});
-
-userRouter.get('/me', async (req, res) => {
-  const token = req.cookies.session;
-  if (!token) return res.status(401).json({ error: 'Not authenticated' });
-  const userId = await validateSession(token);
-  if (!userId) return res.status(401).json({ error: 'Session expired' });
-  res.json({ userId });
-});`,
-  },
-  {
-    filename: 'src/middleware/rateLimit.ts',
-    language: 'typescript',
-    content: `import rateLimit from 'express-rate-limit';
-import RedisStore from 'rate-limit-redis';
-import { redisClient } from '../db/redis';
-
-export const loginRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  store: new RedisStore({ sendCommand: (...args: string[]) => redisClient.sendCommand(args) }),
-  message: { error: 'Too many login attempts, please try again later.' },
-  skipSuccessfulRequests: true,
-});
-
-export const apiRateLimit = rateLimit({
-  windowMs: 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-});`,
-  },
-  {
-    filename: 'src/auth/passwordReset.ts',
-    language: 'typescript',
-    content: `import { db } from '../db/client';
-import { sendEmail } from '../services/email';
-import { randomBytes } from 'crypto';
-
-const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
-
-export async function requestPasswordReset(email: string): Promise<void> {
-  const user = await db.query('SELECT id FROM users WHERE email = $1', [email]);
-  if (!user.rows[0]) return; // Don't reveal if email exists
-  const token = randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + RESET_TTL_MS);
-  await db.query(
-    'INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET token=$2, expires_at=$3',
-    [user.rows[0].id, token, expiresAt]
-  );
-  await sendEmail({ to: email, subject: 'Reset your password', token });
-}
-
-export async function confirmPasswordReset(token: string, newPassword: string): Promise<boolean> {
-  const result = await db.query(
-    'SELECT user_id FROM password_resets WHERE token = $1 AND expires_at > NOW()',
-    [token]
-  );
-  if (!result.rows[0]) return false;
-  const hash = await bcrypt.hash(newPassword, 12);
-  await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, result.rows[0].user_id]);
-  await db.query('DELETE FROM password_resets WHERE user_id = $1', [result.rows[0].user_id]);
-  return true;
-}`,
-  },
-];
 
 // ─── BM25 Implementation ──────────────────────────────────────────────────────
 
@@ -211,7 +30,7 @@ interface BM25Index {
   N: number;
 }
 
-function buildBM25Index(docs: typeof CODEBASE): BM25Index {
+function buildBM25Index(docs: MockFile[]): BM25Index {
   const tokenized = docs.map(d => ({
     filename: d.filename,
     tokens: filterTokens(tokenize(d.filename + ' ' + d.content)),
@@ -252,7 +71,7 @@ function retrieveTopK(index: BM25Index, query: string, k: number): { filename: s
   const scores = index.docs.map((doc, i) => {
     const score = bm25Score(index, qTokens, i);
     const matchedTerms = qTokens.filter(qt => doc.tokens.includes(qt));
-    return { filename: doc.filename, content: CODEBASE[i].content, score, matchedTerms };
+    return { filename: doc.filename, content: doc.content, score, matchedTerms };
   });
   return scores
     .filter(s => s.score > 0)
@@ -260,9 +79,7 @@ function retrieveTopK(index: BM25Index, query: string, k: number): { filename: s
     .slice(0, k);
 }
 
-// ─── Singleton index ──────────────────────────────────────────────────────────
-
-const INDEX = buildBM25Index(CODEBASE);
+// BM25 index is built per-codebase inside RAGDemo via useMemo.
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -351,17 +168,11 @@ function ResponsePanel({ label, color, icon, response, loading, chunks }: {
 
 // ─── Example Queries ──────────────────────────────────────────────────────────
 
-const EXAMPLE_QUERIES = [
-  'How does session expiry work in this codebase?',
-  'Where is the login rate limiting implemented?',
-  'How is the database connection pool configured?',
-  'Walk me through what happens when a user logs out',
-  'How does password reset work and how long is the token valid?',
-];
-
 // ─── RAG Demo ─────────────────────────────────────────────────────────────────
 
 function RAGDemo() {
+  const { pack, packId } = useContentPack();
+  const index = useMemo(() => buildBM25Index(pack.scaffolds.codebase), [pack.scaffolds.codebase]);
   const [query, setQuery] = useState('');
   const [loadingRaw, setLoadingRaw] = useState(false);
   const [loadingRag, setLoadingRag] = useState(false);
@@ -370,6 +181,15 @@ function RAGDemo() {
   const [retrievedChunks, setRetrievedChunks] = useState<ReturnType<typeof retrieveTopK>>([]);
   const [error, setError] = useState<string | null>(null);
   const [hasRun, setHasRun] = useState(false);
+
+  // Reset results when pack changes
+  useEffect(() => {
+    setQuery('');
+    setRawResponse(null);
+    setRagResponse(null);
+    setRetrievedChunks([]);
+    setHasRun(false);
+  }, [packId]);
 
   const handleRun = useCallback(async (queryText?: string) => {
     const q = (queryText ?? query).trim();
@@ -391,7 +211,7 @@ function RAGDemo() {
     setLoadingRag(true);
 
     // BM25 retrieval — instant
-    const chunks = retrieveTopK(INDEX, q, 3);
+    const chunks = retrieveTopK(index, q, 3);
     setRetrievedChunks(chunks);
 
     const model = 'openai/gpt-4o-mini';
@@ -437,10 +257,10 @@ function RAGDemo() {
       <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 border-b border-white/10">
           <BookOpen className="w-4 h-4 text-gray-500" />
-          <span className="text-xs text-gray-500 uppercase tracking-wider font-mono">Simulated Codebase — {CODEBASE.length} files indexed</span>
+          <span className="text-xs text-gray-500 uppercase tracking-wider font-mono">Simulated {pack.scaffolds.domainLabel} — {pack.scaffolds.codebase.length} files indexed</span>
         </div>
         <div className="flex flex-wrap gap-2 p-4">
-          {CODEBASE.map(f => (
+          {pack.scaffolds.codebase.map(f => (
             <span key={f.filename} className="text-xs font-mono text-gray-600 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-1.5">
               <FileCode2 className="w-3 h-3" />{f.filename}
             </span>
@@ -456,7 +276,7 @@ function RAGDemo() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleRun(); }}
-            placeholder="Ask a question about the codebase..."
+            placeholder={`Ask a question about the ${pack.scaffolds.domainLabel.toLowerCase()}...`}
             className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm font-mono"
           />
           <button
@@ -471,7 +291,7 @@ function RAGDemo() {
 
         {/* Example queries */}
         <div className="flex flex-wrap gap-2">
-          {EXAMPLE_QUERIES.map(q => (
+          {pack.scaffolds.exampleQueries.map(q => (
             <button
               key={q}
               onClick={() => handleRun(q)}
@@ -498,7 +318,7 @@ function RAGDemo() {
           <Search className="w-4 h-4 text-gray-500 mt-0.5 shrink-0" />
           <div>
             <p className="text-xs text-gray-500 font-mono">
-              <span className="text-gray-300">BM25 retrieval</span> ranked {CODEBASE.length} files by term frequency × inverse document frequency.
+              <span className="text-gray-300">BM25 retrieval</span> ranked {pack.scaffolds.codebase.length} files by term frequency × inverse document frequency.
               Top {retrievedChunks.length} chunks injected into the RAG prompt.
               Matched terms: <span className="text-emerald-400">{[...new Set(retrievedChunks.flatMap(c => c.matchedTerms))].join(', ')}</span>
             </p>

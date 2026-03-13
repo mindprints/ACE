@@ -7,6 +7,7 @@ import {
 import { fetchOpenRouterChatFull } from '../services/openRouter';
 import { cn } from './Layout';
 import Markdown from 'react-markdown';
+import { useContentPack } from '../context/ContentPackContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,12 +46,7 @@ const ACTION_COLORS: Record<ActionType, string> = {
   complete: 'text-green-400 bg-green-500/10 border-green-500/20',
 };
 
-const EXAMPLE_TASKS = [
-  'Go to news.ycombinator.com and summarise the top 3 AI stories',
-  'Search Wikipedia for "Model Context Protocol" and extract the key points',
-  'Visit openrouter.ai and list the available free-tier models',
-  'Go to github.com/trending and find the top Python repository today',
-];
+// EXAMPLE_TASKS moved to content packs — consumed via useContentPack() in the component body
 
 // ─── Simulated Agent Execution ────────────────────────────────────────────────
 
@@ -211,6 +207,7 @@ function BrowserWindow({ url, loading, summary }: { url?: string; loading: boole
 // ─── Main Demo ────────────────────────────────────────────────────────────────
 
 function BrowserUseDemo() {
+  const { pack } = useContentPack();
   const [task, setTask] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AgentStep | null>(null);
@@ -294,7 +291,7 @@ function BrowserUseDemo() {
 
         {/* Example tasks */}
         <div className="flex flex-wrap gap-2">
-          {EXAMPLE_TASKS.map(t => (
+          {pack.browserUse.exampleTasks.map(t => (
             <button
               key={t}
               onClick={() => handleRun(t)}

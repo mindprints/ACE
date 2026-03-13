@@ -3,16 +3,18 @@ import { fetchOpenRouterChat } from '../services/openRouter';
 import { Users, Code2, ShieldCheck, Play, Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { cn } from './Layout';
+import { useContentPack } from '../context/ContentPackContext';
 
 interface AgentMessage {
   id: string;
-  agent: 'User' | 'Coder' | 'Reviewer';
+  agent: string;
   content: string;
   status: 'pending' | 'active' | 'done';
 }
 
 export function MultiAgent() {
-  const [task, setTask] = useState('Write a Python script to scrape a website and save the links to a CSV file.');
+  const { pack } = useContentPack();
+  const [task, setTask] = useState(pack.multiAgent.defaultTask);
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,42 +38,35 @@ export function MultiAgent() {
     setError(null);
     setIsExecuting(true);
     
+    const { agentALabel, agentBLabel, agentAPrompt, agentBPrompt } = pack.multiAgent;
+
     // Initial state
     let currentMessages: AgentMessage[] = [
       { id: 'user-1', agent: 'User', content: task, status: 'done' },
-      { id: 'coder-1', agent: 'Coder', content: '', status: 'active' }
+      { id: 'agent-a-1', agent: agentALabel, content: '', status: 'active' }
     ];
     setMessages([...currentMessages]);
 
     try {
-      // --- AGENT 1: The Coder ---
-      const coderPrompt = `You are an expert Senior Developer. 
-Your task is to write the code for the user's request. 
-Provide ONLY the code and a very brief explanation. Do not add fluff.`;
-      
-      const coderResponse = await fetchOpenRouterChat([
-        { role: 'system', content: coderPrompt },
+      // --- AGENT 1 ---
+      const agentAResponse = await fetchOpenRouterChat([
+        { role: 'system', content: agentAPrompt },
         { role: 'user', content: task }
       ], 'openai/gpt-4o', apiKey);
 
-      // Update Coder to done, add Reviewer as active
-      currentMessages = currentMessages.map(m => m.id === 'coder-1' ? { ...m, content: coderResponse, status: 'done' } : m);
-      currentMessages.push({ id: 'reviewer-1', agent: 'Reviewer', content: '', status: 'active' });
+      // Update Agent A to done, add Agent B as active
+      currentMessages = currentMessages.map(m => m.id === 'agent-a-1' ? { ...m, content: agentAResponse, status: 'done' } : m);
+      currentMessages.push({ id: 'agent-b-1', agent: agentBLabel, content: '', status: 'active' });
       setMessages([...currentMessages]);
 
-      // --- AGENT 2: The Reviewer ---
-      const reviewerPrompt = `You are a strict Security and Performance Code Reviewer. 
-Review the following code provided by the Coder. 
-1. Point out exactly ONE critical improvement (security, performance, or best practice).
-2. Provide the final, refactored code incorporating your improvement.`;
+      // --- AGENT 2 ---
+      const agentBResponse = await fetchOpenRouterChat([
+        { role: 'system', content: agentBPrompt },
+        { role: 'user', content: agentAResponse }
+      ], 'openai/gpt-4o', apiKey);
 
-      const reviewerResponse = await fetchOpenRouterChat([
-        { role: 'system', content: reviewerPrompt },
-        { role: 'user', content: `Please review this code:\n\n${coderResponse}` }
-      ], 'openai/gpt-4o', apiKey); // Using Claude for the reviewer to show multi-model orchestration could be cool, but sticking to GPT-4o for speed/consistency here.
-
-      // Update Reviewer to done
-      currentMessages = currentMessages.map(m => m.id === 'reviewer-1' ? { ...m, content: reviewerResponse, status: 'done' } : m);
+      // Update Agent B to done
+      currentMessages = currentMessages.map(m => m.id === 'agent-b-1' ? { ...m, content: agentBResponse, status: 'done' } : m);
       setMessages([...currentMessages]);
 
     } catch (err: any) {
@@ -85,12 +80,10 @@ Review the following code provided by the Coder.
     if (status === 'active') return <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />;
     if (status === 'pending') return <div className="w-5 h-5 rounded-full border-2 border-gray-600" />;
     
-    switch (agent) {
-      case 'User': return <Users className="w-5 h-5 text-blue-400" />;
-      case 'Coder': return <Code2 className="w-5 h-5 text-purple-400" />;
-      case 'Reviewer': return <ShieldCheck className="w-5 h-5 text-amber-400" />;
-      default: return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-    }
+    if (agent === 'User') return <Users className="w-5 h-5 text-blue-400" />;
+    if (agent === pack.multiAgent.agentALabel) return <Code2 className="w-5 h-5 text-purple-400" />;
+    if (agent === pack.multiAgent.agentBLabel) return <ShieldCheck className="w-5 h-5 text-amber-400" />;
+    return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
   };
 
   return (
@@ -98,9 +91,9 @@ Review the following code provided by the Coder.
       <div className="flex-shrink-0">
         <h2 className="text-2xl font-semibold text-white mb-2">Multi-Agent Platforms</h2>
         <p className="text-gray-400 text-sm max-w-3xl">
-          Instead of relying on a single prompt, modern frameworks (like AutoGen, CrewAI, or LangGraph) orchestrate 
-          multiple specialized agents. Here, a <strong>Coder Agent</strong> writes the initial implementation, and a 
-          <strong> Reviewer Agent</strong> critiques and refactors it.
+          Instead of relying on a single prompt, modern frameworks (like AutoGen, CrewAI, or LangGraph) orchestrate
+          multiple specialized agents. Here, a <strong>{pack.multiAgent.agentALabel} Agent</strong> produces the initial output, and a
+          <strong> {pack.multiAgent.agentBLabel} Agent</strong> critiques and refines it.
         </p>
       </div>
 
@@ -141,11 +134,11 @@ Review the following code provided by the Coder.
           </div>
           <ArrowRight className="w-4 h-4 text-gray-600" />
           <div className="flex items-center gap-2 text-purple-400">
-            <Code2 className="w-4 h-4" /> Coder Agent
+            <Code2 className="w-4 h-4" /> {pack.multiAgent.agentALabel} Agent
           </div>
           <ArrowRight className="w-4 h-4 text-gray-600" />
           <div className="flex items-center gap-2 text-amber-400">
-            <ShieldCheck className="w-4 h-4" /> Reviewer Agent
+            <ShieldCheck className="w-4 h-4" /> {pack.multiAgent.agentBLabel} Agent
           </div>
         </div>
 
@@ -161,8 +154,8 @@ Review the following code provided by the Coder.
               "flex gap-4 p-5 rounded-xl border transition-all duration-500",
               msg.status === 'active' ? "bg-white/5 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-black/20 border-white/5",
               msg.agent === 'User' && "border-blue-500/20",
-              msg.agent === 'Coder' && msg.status === 'done' && "border-purple-500/20",
-              msg.agent === 'Reviewer' && msg.status === 'done' && "border-amber-500/20"
+              msg.agent === pack.multiAgent.agentALabel && msg.status === 'done' && "border-purple-500/20",
+              msg.agent === pack.multiAgent.agentBLabel && msg.status === 'done' && "border-amber-500/20"
             )}>
               <div className="flex-shrink-0 mt-1">
                 {getAgentIcon(msg.agent, msg.status)}

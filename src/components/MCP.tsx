@@ -1,117 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Network, Plug, Server, FileText, ArrowRight, Database, Globe, ChevronRight, Play, RotateCcw, Terminal, Loader2, CheckCircle2, Code2, FolderOpen, GitBranch, Table2, X } from 'lucide-react';
+import { Network, Plug, Server, FileText, ArrowRight, Database, Globe, ChevronRight, Play, RotateCcw, Terminal, Loader2, CheckCircle2, Code2, FolderOpen, GitBranch, Table2, X, Mail, Calendar, BookOpen } from 'lucide-react';
 import { cn } from './Layout';
+import { useContentPack } from '../context/ContentPackContext';
+import type { MCPServer } from '../data/contentPack';
 
-// ─── MCP Server Definitions ──────────────────────────────────────────────────
+// ─── Server icon map (server ID → icon element) ──────────────────────────────
+// Icons stay in the component since they're JSX — server data lives in content packs.
 
-const MCP_SERVERS = [
-  {
-    id: 'filesystem',
-    name: 'Local Filesystem',
-    icon: <FolderOpen className="w-5 h-5" />,
-    color: 'amber',
-    description: 'Exposes your local files and directories as readable resources.',
-    version: '1.0.0',
-    resources: [
-      { uri: 'file:///home/user/project/README.md', name: 'README.md', mimeType: 'text/markdown' },
-      { uri: 'file:///home/user/project/src/index.ts', name: 'index.ts', mimeType: 'text/typescript' },
-      { uri: 'file:///home/user/.env', name: '.env', mimeType: 'text/plain' },
-    ],
-    tools: [
-      {
-        name: 'read_file',
-        description: 'Read the complete contents of a file.',
-        inputSchema: { type: 'object', properties: { path: { type: 'string', description: 'Absolute file path' } }, required: ['path'] },
-        exampleArgs: { path: '/home/user/project/README.md' },
-        mockResult: '# My Project\n\nA TypeScript application.\n\n## Getting Started\n\n```bash\nnpm install\nnpm run dev\n```'
-      },
-      {
-        name: 'list_directory',
-        description: 'Get a listing of all files in a directory.',
-        inputSchema: { type: 'object', properties: { path: { type: 'string', description: 'Directory path' } }, required: ['path'] },
-        exampleArgs: { path: '/home/user/project' },
-        mockResult: '["README.md", "package.json", "tsconfig.json", "src/", "node_modules/"]'
-      },
-      {
-        name: 'write_file',
-        description: 'Create or overwrite a file with new content.',
-        inputSchema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] },
-        exampleArgs: { path: '/home/user/project/notes.txt', content: 'Hello from MCP!' },
-        mockResult: '{"success": true, "bytesWritten": 16}'
-      }
-    ]
-  },
-  {
-    id: 'github',
-    name: 'GitHub API',
-    icon: <GitBranch className="w-5 h-5" />,
-    color: 'blue',
-    description: 'Read repos, issues, PRs and commit to branches via GitHub REST.',
-    version: '2.1.0',
-    resources: [
-      { uri: 'github://repo/mindprints/ACE', name: 'mindprints/ACE', mimeType: 'application/json' },
-      { uri: 'github://issues/mindprints/ACE', name: 'Open Issues', mimeType: 'application/json' },
-    ],
-    tools: [
-      {
-        name: 'list_repos',
-        description: 'List repositories for a GitHub user or organization.',
-        inputSchema: { type: 'object', properties: { owner: { type: 'string' } }, required: ['owner'] },
-        exampleArgs: { owner: 'mindprints' },
-        mockResult: '[{"name":"ACE","stars":0,"language":"TypeScript","private":false},{"name":"dotfiles","stars":2,"language":"Shell","private":false}]'
-      },
-      {
-        name: 'get_file_contents',
-        description: 'Get the contents of a file in a GitHub repository.',
-        inputSchema: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' }, path: { type: 'string' } }, required: ['owner', 'repo', 'path'] },
-        exampleArgs: { owner: 'mindprints', repo: 'ACE', path: 'package.json' },
-        mockResult: '{"name":"ace","version":"0.1.0","scripts":{"dev":"vite","build":"tsc && vite build"}}'
-      },
-      {
-        name: 'create_issue',
-        description: 'Create a new issue in a repository.',
-        inputSchema: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' }, title: { type: 'string' }, body: { type: 'string' } }, required: ['owner', 'repo', 'title'] },
-        exampleArgs: { owner: 'mindprints', repo: 'ACE', title: 'Add dark mode support', body: 'Users have requested a dark theme option.' },
-        mockResult: '{"id": 1042, "number": 3, "title": "Add dark mode support", "state": "open", "url": "https://github.com/mindprints/ACE/issues/3"}'
-      }
-    ]
-  },
-  {
-    id: 'postgres',
-    name: 'Postgres DB',
-    icon: <Table2 className="w-5 h-5" />,
-    color: 'emerald',
-    description: 'Query your database schema and run read-only SQL through the model.',
-    version: '0.9.2',
-    resources: [
-      { uri: 'postgres://localhost/myapp/schema', name: 'Database Schema', mimeType: 'application/json' },
-      { uri: 'postgres://localhost/myapp/tables/users', name: 'users table', mimeType: 'application/json' },
-    ],
-    tools: [
-      {
-        name: 'query',
-        description: 'Run a read-only SQL query against the database.',
-        inputSchema: { type: 'object', properties: { sql: { type: 'string', description: 'SQL SELECT statement' } }, required: ['sql'] },
-        exampleArgs: { sql: 'SELECT id, email, created_at FROM users ORDER BY created_at DESC LIMIT 5' },
-        mockResult: '[{"id":1,"email":"alice@example.com","created_at":"2024-01-15"},{"id":2,"email":"bob@example.com","created_at":"2024-01-16"},{"id":3,"email":"carol@example.com","created_at":"2024-01-17"}]'
-      },
-      {
-        name: 'list_tables',
-        description: 'List all tables and their column definitions.',
-        inputSchema: { type: 'object', properties: { schema: { type: 'string', description: 'Schema name (default: public)' } }, required: [] },
-        exampleArgs: { schema: 'public' },
-        mockResult: '[{"table":"users","columns":["id","email","name","created_at"]},{"table":"posts","columns":["id","user_id","title","body","published_at"]},{"table":"sessions","columns":["id","user_id","token","expires_at"]}]'
-      },
-      {
-        name: 'explain',
-        description: 'Get the query execution plan for a SQL statement.',
-        inputSchema: { type: 'object', properties: { sql: { type: 'string' } }, required: ['sql'] },
-        exampleArgs: { sql: 'SELECT * FROM posts WHERE user_id = 42' },
-        mockResult: 'Seq Scan on posts (cost=0.00..24.50 rows=3 width=248)\n  Filter: (user_id = 42)\nPlanning Time: 0.8 ms'
-      }
-    ]
-  }
-];
+const SERVER_ICONS: Record<string, React.ReactNode> = {
+  filesystem: <FolderOpen className="w-5 h-5" />,
+  github:     <GitBranch className="w-5 h-5" />,
+  postgres:   <Table2 className="w-5 h-5" />,
+  documents:  <BookOpen className="w-5 h-5" />,
+  calendar:   <Calendar className="w-5 h-5" />,
+  email:      <Mail className="w-5 h-5" />,
+};
+
+const DEFAULT_SERVER_ICON = <Server className="w-5 h-5" />;
+
+// Server data is provided by the active content pack via useContentPack().
 
 // ─── JSON-RPC Message Builder ─────────────────────────────────────────────────
 
@@ -201,7 +108,7 @@ function ProtocolLog({ entries, onClear }: { entries: LogEntry[]; onClear: () =>
 
 // ─── Tool Playground ──────────────────────────────────────────────────────────
 
-function ToolPlayground({ server, onLog }: { server: typeof MCP_SERVERS[0]; onLog: (entry: LogEntry) => void }) {
+function ToolPlayground({ server, onLog }: { server: MCPServer; onLog: (entry: LogEntry) => void }) {
   const [selectedTool, setSelectedTool] = useState(server.tools[0]);
   const [argsJson, setArgsJson] = useState(JSON.stringify(server.tools[0].exampleArgs, null, 2));
   const [result, setResult] = useState<string | null>(null);
@@ -315,7 +222,7 @@ function ToolPlayground({ server, onLog }: { server: typeof MCP_SERVERS[0]; onLo
 
 // ─── Resources Panel ──────────────────────────────────────────────────────────
 
-function ResourcesPanel({ server, onLog }: { server: typeof MCP_SERVERS[0]; onLog: (entry: LogEntry) => void }) {
+function ResourcesPanel({ server, onLog }: { server: MCPServer; onLog: (entry: LogEntry) => void }) {
   const [reading, setReading] = useState<string | null>(null);
   const [readResult, setReadResult] = useState<Record<string, string>>({});
   const color = COLOR[server.color as ColorKey];
@@ -374,7 +281,8 @@ function ResourcesPanel({ server, onLog }: { server: typeof MCP_SERVERS[0]; onLo
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function MCP() {
-  const [connectedServer, setConnectedServer] = useState<typeof MCP_SERVERS[0] | null>(null);
+  const { pack } = useContentPack();
+  const [connectedServer, setConnectedServer] = useState<MCPServer | null>(null);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'tools' | 'resources'>('tools');
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
@@ -385,7 +293,7 @@ export function MCP() {
     setShowLog(true);
   };
 
-  const handleConnect = async (server: typeof MCP_SERVERS[0]) => {
+  const handleConnect = async (server: MCPServer) => {
     if (connecting) return;
     setConnecting(server.id);
     setLogEntries([]);
@@ -528,7 +436,7 @@ export function MCP() {
           {/* Server cards */}
           {!connectedServer && (
             <div className="grid md:grid-cols-3 gap-4 mb-6">
-              {MCP_SERVERS.map(server => {
+              {pack.mcp.servers.map(server => {
                 const c = COLOR[server.color as ColorKey];
                 return (
                   <button
@@ -541,7 +449,7 @@ export function MCP() {
                     )}
                   >
                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-4", c.bg, c.text, 'border', c.border)}>
-                      {connecting === server.id ? <Loader2 className="w-5 h-5 animate-spin" /> : server.icon}
+                      {connecting === server.id ? <Loader2 className="w-5 h-5 animate-spin" /> : (SERVER_ICONS[server.id] ?? DEFAULT_SERVER_ICON)}
                     </div>
                     <h4 className="text-white font-semibold mb-1">{server.name}</h4>
                     <p className="text-gray-500 text-xs leading-relaxed mb-4">{server.description}</p>
@@ -563,7 +471,7 @@ export function MCP() {
                 <div className={cn("w-2 h-2 rounded-full animate-pulse", color.dot)} />
                 <span className={cn("font-mono text-sm font-semibold", color.text)}>{connectedServer.name}</span>
                 <span className="text-gray-600 text-xs font-mono">v{connectedServer.version}</span>
-                <span className="text-gray-600 text-xs font-mono ml-auto">{connectedServer.tools.length} tools · {connectedServer.resources.length} resources</span>
+                <span className="text-gray-600 text-xs font-mono ml-auto">{connectedServer.tools.length} tools · {connectedServer.resources?.length ?? 0} resources</span>
                 <button
                   onClick={handleDisconnect}
                   className="text-gray-600 hover:text-gray-400 transition-colors ml-2"

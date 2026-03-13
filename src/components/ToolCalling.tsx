@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { cn } from './Layout';
+import { useContentPack } from '../context/ContentPackContext';
 
 // ─── Tool Definitions (sent to the model) ────────────────────────────────────
 
@@ -262,14 +263,6 @@ const TOOL_META: Record<string, { icon: React.ReactNode; color: string; label: s
   web_search:     { icon: <Search className="w-3.5 h-3.5" />,      color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10', label: 'Search' },
 };
 
-const EXAMPLE_PROMPTS = [
-  "What's the weather like in Tokyo right now?",
-  "What's the current price of NVDA stock?",
-  "Calculate 15% of 847 and then tell me what 2^10 is",
-  "Search for what Model Context Protocol is",
-  "Compare the weather in London and Dubai",
-];
-
 // ─── Tool Call Badge ──────────────────────────────────────────────────────────
 
 function ToolCallBadge({ name, args, result, status }: {
@@ -338,11 +331,9 @@ type UiMessage =
   | { role: 'tool_call'; id: string; name: string; args: string; result?: string; status: 'running' | 'done' | 'error' };
 
 export function ToolCalling() {
+  const { pack, packId } = useContentPack();
   const [uiMessages, setUiMessages] = useState<UiMessage[]>([
-    {
-      role: 'assistant',
-      content: "Hello! I'm an AI with **real** tools — not mocks. I can fetch live data from the web.\n\nTry asking me about the weather, a stock price, a calculation, or search the web for anything."
-    }
+    { role: 'assistant', content: pack.toolCalling.initialMessage }
   ]);
   // The actual conversation history sent to the API (no UI-only entries)
   const [apiMessages, setApiMessages] = useState<any[]>([]);
@@ -354,6 +345,13 @@ export function ToolCalling() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [uiMessages, loading]);
+
+  // Reset chat when pack changes
+  useEffect(() => {
+    setUiMessages([{ role: 'assistant', content: pack.toolCalling.initialMessage }]);
+    setApiMessages([]);
+    setInput('');
+  }, [packId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateToolCallUi = (id: string, result: string, status: 'done' | 'error') => {
     setUiMessages(prev => prev.map(m =>
@@ -484,7 +482,6 @@ export function ToolCalling() {
               return (
                 <ToolCallBadge
                   key={idx}
-                  id={msg.id}
                   name={msg.name}
                   args={msg.args}
                   result={msg.result}
@@ -531,7 +528,7 @@ export function ToolCalling() {
 
         {/* Example prompts */}
         <div className="px-4 pt-3 flex gap-2 flex-wrap border-t border-white/5">
-          {EXAMPLE_PROMPTS.map((p, i) => (
+          {pack.toolCalling.examplePrompts.map((p, i) => (
             <button
               key={i}
               onClick={() => handleSend(p)}

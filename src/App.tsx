@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ContentPackProvider } from './context/ContentPackContext';
 import { Layout } from './components/Layout';
 import { Setup } from './components/Setup';
 import { ModelComparison } from './components/ModelComparison';
@@ -49,8 +50,10 @@ export default function App() {
   };
 
   return (
-    <Layout activeChapterId={activeChapterId} onChapterSelect={setActiveChapterId}>
-      {renderContent()}
-    </Layout>
+    <ContentPackProvider>
+      <Layout activeChapterId={activeChapterId} onChapterSelect={setActiveChapterId}>
+        {renderContent()}
+      </Layout>
+    </ContentPackProvider>
   );
 }
