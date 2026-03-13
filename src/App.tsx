@@ -9,13 +9,17 @@ import { Agents } from './components/Agents';
 import { AgentsMD } from './components/AgentsMD';
 import { CLI } from './components/CLI';
 import { MultiAgent } from './components/MultiAgent';
+import { BrowserUse } from './components/Browseruse';
+import { Timeline } from './components/Timeline';
+import { IDEEvolution } from './components/Ideevolution';
 import { CURRICULUM } from './constants';
 
 export default function App() {
-  const [activeChapterId, setActiveChapterId] = useState('setup');
+  const [activeChapterId, setActiveChapterId] = useState('timeline');
 
   const renderContent = () => {
     switch (activeChapterId) {
+      case 'timeline':    return <Timeline />;
       case 'setup':       return <Setup onComplete={() => setActiveChapterId('basics')} />;
       case 'basics':      return <ModelComparison />;
       case 'scaffolds':   return <Scaffolds />;
@@ -24,7 +28,9 @@ export default function App() {
       case 'skills':      return <Agents />;
       case 'agents-md':   return <AgentsMD />;
       case 'cli':         return <CLI />;
+      case 'browser-use': return <BrowserUse />;
       case 'multi-agent': return <MultiAgent />;
+      case 'ide-evolution': return <IDEEvolution />;
       default:
         const chapter = CURRICULUM.find(c => c.id === activeChapterId);
         return (

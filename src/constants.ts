@@ -2,6 +2,12 @@ import { Chapter } from './types';
 
 export const CURRICULUM: Chapter[] = [
   {
+    id: 'timeline',
+    title: 'The Ecosystem Timeline',
+    description: 'A timeline of the AI coding ecosystem.',
+    type: 'interactive'
+  },
+  {
     id: 'setup',
     title: 'Setup & Configuration',
     description: 'Configure your OpenRouter API key to enable live demos.',
@@ -50,9 +56,21 @@ export const CURRICULUM: Chapter[] = [
     type: 'interactive'
   },
   {
+    id: 'browser-use',
+    title: '8. Browser & Computer Use',
+    description: 'Agents that can see and act in the world',
+    type: 'interactive'
+  },
+  {
     id: 'multi-agent',
-    title: '8. Multi-Agent Platforms',
+    title: '9. Multi-Agent Platforms',
     description: 'Orchestrating multiple specialized agents to solve complex problems.',
+    type: 'interactive'
+  },
+  {
+    id: 'ide-evolution',
+    title: '10. IDE Evolution',
+    description: 'The progression of AI in the editor, from autocomplete to agents.',
     type: 'interactive'
   },
 ];
