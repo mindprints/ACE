@@ -62,5 +62,9 @@ export const POPULAR_MODELS = [
   { id: 'anthropic/claude-3.5-sonnet',            name: 'Claude 3.5 Sonnet', provider: 'Anthropic' },
   { id: 'meta-llama/llama-3.3-70b-instruct',      name: 'Llama 3.3 70B',    provider: 'Meta'      },
   { id: 'google/gemini-2.5-pro',                  name: 'Gemini 2.5 Pro',   provider: 'Google'    },
-  { id: 'deepseek/deepseek-coder',                name: 'DeepSeek Coder',   provider: 'DeepSeek'  },
+  { id: 'z-ai/glm-5',                             name: 'GLM 5',   provider: 'Z.ai'  },
+  { id: 'qwen/qwen3.5-plus-02-15',                name: 'Qwen 3.5',   provider: 'Alibaba'  },
+  { id: 'moonshotai/kimi-k2-thinking',            name: 'Kimi K2',   provider: 'Moonshot AI'  },
+  { id: 'minimax/minimax-m2.5',                   name: 'MiniMax',   provider: 'MiniBax'  },
+  { id: 'deepseek/deepseek-v3.2-speciale',        name: 'DeepSeek V3.2',   provider: 'DeepSeek'  },
 ];
