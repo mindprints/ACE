@@ -1,8 +1,9 @@
 import React from 'react';
 import { CURRICULUM } from '../constants';
-import { BookOpen, Settings, Terminal, Cpu, Network, Wrench, LayoutTemplate, Search } from 'lucide-react';
+import { BookOpen, Settings, Terminal, Cpu, Network, Wrench, LayoutTemplate, Search, Code2, Users } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useContentPack } from '../context/ContentPackContext';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -26,6 +27,8 @@ interface LayoutProps {
 }
 
 export function Layout({ children, activeChapterId, onChapterSelect }: LayoutProps) {
+  const { packId, setPackId } = useContentPack();
+
   return (
     <div className="flex h-screen bg-[#0a0a0a] text-gray-300 font-sans overflow-hidden">
       {/* Sidebar */}
@@ -33,6 +36,34 @@ export function Layout({ children, activeChapterId, onChapterSelect }: LayoutPro
         <div className="p-6 border-b border-white/10">
           <h1 className="text-lg font-semibold text-white tracking-tight">AI Coding Evolution</h1>
           <p className="text-xs text-gray-500 mt-1">Interactive Curriculum</p>
+
+          {/* Audience toggle */}
+          <div className="mt-4 flex items-center gap-1 p-1 bg-black/40 rounded-lg border border-white/10">
+            <button
+              onClick={() => setPackId('developer')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-colors',
+                packId === 'developer'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-400 hover:text-gray-200'
+              )}
+            >
+              <Code2 className="w-3 h-3" />
+              Developer
+            </button>
+            <button
+              onClick={() => setPackId('generalist')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-colors',
+                packId === 'generalist'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-400 hover:text-gray-200'
+              )}
+            >
+              <Users className="w-3 h-3" />
+              Generalist
+            </button>
+          </div>
         </div>
         
         <div className="flex-1 overflow-y-auto py-4">

@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { cn } from './Layout';
+import { useContentPack } from '../context/ContentPackContext';
+import type { SkillDef } from '../data/contentPack';
 
 // ─── Agent tools ──────────────────────────────────────────────────────────────
 
@@ -239,11 +241,11 @@ Single .ts file with typed client, all query functions exported, inline error ha
 
 // ─── BM25-lite skill matcher ───────────────────────────────────────────────────
 
-function matchSkill(task: string): string | null {
+function matchSkill(task: string, skills: Record<string, SkillDef>): string | null {
   const tokens = task.toLowerCase().split(/\s+/);
   let best: string | null = null;
   let bestScore = 0;
-  for (const [key, skill] of Object.entries(SKILLS)) {
+  for (const [key, skill] of Object.entries(skills)) {
     const score = skill.triggerKeywords.reduce((acc, kw) =>
       acc + tokens.filter(t => t.includes(kw)).length, 0);
     if (score > bestScore) { bestScore = score; best = key; }
@@ -398,8 +400,9 @@ function StepList({ steps, loading }: { steps: AgentStep[]; loading: boolean }) 
 // ─── Skill card ───────────────────────────────────────────────────────────────
 
 function SkillCard({ skillKey }: { skillKey: string }) {
+  const { pack } = useContentPack();
   const [open, setOpen] = useState(false);
-  const skill = SKILLS[skillKey];
+  const skill = pack.agents.skills[skillKey];
   if (!skill) return null;
   return (
     <div className="border border-emerald-500/30 bg-emerald-500/5 rounded-xl overflow-hidden text-xs font-mono">
@@ -423,19 +426,12 @@ function SkillCard({ skillKey }: { skillKey: string }) {
   );
 }
 
-// ─── Example tasks ─────────────────────────────────────────────────────────────
-
-const EXAMPLE_TASKS = [
-  'Build a notification banner component with dismiss button',
-  'Create a stats card with a trend indicator',
-  'Write a useLocalStorage hook with TypeScript generics',
-  'Add a Supabase query for fetching user proposals',
-];
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export function Agents() {
-  const [goal, setGoal] = useState(EXAMPLE_TASKS[0]);
+  const { pack, packId } = useContentPack();
+  const [goal, setGoal] = useState(pack.agents.exampleTasks[0]);
   const [stepsNoSkill, setStepsNoSkill] = useState<AgentStep[]>([]);
   const [stepsWithSkill, setStepsWithSkill] = useState<AgentStep[]>([]);
   const [loadingLeft, setLoadingLeft] = useState(false);
@@ -450,6 +446,15 @@ export function Agents() {
   const [agentRunning, setAgentRunning] = useState(false);
   const [agentError, setAgentError] = useState<string | null>(null);
   const [showAgentDemo, setShowAgentDemo] = useState(false);
+
+  // Reset when pack changes
+  useEffect(() => {
+    setGoal(pack.agents.exampleTasks[0]);
+    setStepsNoSkill([]);
+    setStepsWithSkill([]);
+    setMatchedSkillKey(null);
+    setHasRun(false);
+  }, [packId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const makeAdder = (setter: React.Dispatch<React.SetStateAction<AgentStep[]>>) =>
     (step: Omit<AgentStep, 'id'>) =>
@@ -470,18 +475,18 @@ export function Agents() {
     setLoadingLeft(true);
     setLoadingRight(true);
 
-    const skillKey = matchSkill(task);
+    const skillKey = matchSkill(task, pack.agents.skills);
     setMatchedSkillKey(skillKey);
 
     const skillExtra = skillKey
-      ? `\n\n# Loaded Skill: ${SKILLS[skillKey].name}\n\n${SKILLS[skillKey].content}`
+      ? `\n\n# Loaded Skill: ${pack.agents.skills[skillKey].name}\n\n${pack.agents.skills[skillKey].content}`
       : '';
 
     if (skillKey) {
       makeAdder(setStepsWithSkill)({
         type: 'skill_loaded',
-        content: SKILLS[skillKey].name,
-        meta: `Matched on: ${SKILLS[skillKey].triggerKeywords.filter(kw => task.toLowerCase().includes(kw)).join(', ')}`
+        content: pack.agents.skills[skillKey].name,
+        meta: `Matched on: ${pack.agents.skills[skillKey].triggerKeywords.filter(kw => task.toLowerCase().includes(kw)).join(', ')}`
       });
     }
 
@@ -594,7 +599,7 @@ export function Agents() {
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {EXAMPLE_TASKS.map(t => (
+            {pack.agents.exampleTasks.map(t => (
               <button
                 key={t}
                 onClick={() => handleRunComparison(t)}
@@ -612,7 +617,7 @@ export function Agents() {
               <>
                 <p className="text-xs text-gray-500 font-mono">
                   <span className="text-emerald-400">✓ Skill matched:</span>{' '}
-                  <span className="text-emerald-300 font-semibold">{SKILLS[matchedSkillKey].name}</span>
+                  <span className="text-emerald-300 font-semibold">{pack.agents.skills[matchedSkillKey]?.name}</span>
                   {' '}— keyword overlap triggered auto-load
                 </p>
                 <SkillCard skillKey={matchedSkillKey} />

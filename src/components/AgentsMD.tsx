@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { fetchOpenRouterChatFull } from '../services/openRouter';
 import {
   FileText, Play, Loader2, AlertCircle, CheckCircle2,
@@ -7,54 +7,7 @@ import {
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { cn } from './Layout';
-
-// ─── Default AGENTS.md for the ACE project ────────────────────────────────────
-
-const DEFAULT_AGENTS_MD = `# AGENTS.md — ACE Project
-
-## Build & Test
-- Install: \`npm install\`
-- Dev server: \`npm run dev\` (Vite, port 5173)
-- Build: \`npm run build\` (TypeScript check then Vite build)
-- No test suite yet — validate by running \`npm run build\` cleanly
-
-## Project Structure
-- \`src/components/\` — one file per curriculum section (Setup, ToolCalling, MCP, etc.)
-- \`src/services/openRouter.ts\` — all AI API calls go through here
-- \`src/constants.ts\` — CURRICULUM array and POPULAR_MODELS list
-- \`src/types.ts\` — shared TypeScript interfaces
-
-## Tech Stack
-- React 18 + TypeScript + Vite
-- Tailwind CSS (dark theme, bg-[#0a0a0a] / bg-[#121212])
-- Lucide React for all icons
-- \`cn()\` from \`./Layout\` for conditional classNames
-- OpenRouter API (key stored in localStorage as \`openrouter_api_key\`)
-
-## Code Conventions
-- Emerald (#10b981) is the primary accent: \`text-emerald-400\`, \`bg-emerald-600\`
-- All borders use opacity: \`border-white/10\` (default), \`border-white/20\` (hover)
-- Cards: \`bg-[#121212] border border-white/10 rounded-2xl p-6\`
-- Inputs: \`bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white\`
-- Buttons: \`px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl\`
-- Always use TypeScript interfaces for props; no \`any\` unless necessary
-- Export functions with named exports, not default
-
-## Boundaries
-- Never touch \`src/services/openRouter.ts\` unless fixing a bug there
-- Never hardcode API keys — always read from localStorage
-- Ask before adding new npm dependencies
-- Do not modify \`App.tsx\` routing without also updating \`src/constants.ts\`
-`;
-
-// ─── Example tasks ─────────────────────────────────────────────────────────────
-
-const EXAMPLE_TASKS = [
-  'Add a new StatusBadge component that shows online/offline/loading states',
-  'Write a useLocalStorage hook with TypeScript generics',
-  'Create a ProgressBar component with animated fill',
-  'Add a CopyButton component that copies text to clipboard with a checkmark feedback',
-];
+import { useContentPack } from '../context/ContentPackContext';
 
 // ─── Section annotations in the AGENTS.md editor ─────────────────────────────
 
@@ -109,8 +62,15 @@ function ResponsePanel({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AgentsMD() {
-  const [agentsMd, setAgentsMd] = useState(DEFAULT_AGENTS_MD);
-  const [task, setTask] = useState(EXAMPLE_TASKS[0]);
+  const { pack, packId } = useContentPack();
+  const [agentsMd, setAgentsMd] = useState(pack.agentsMD.defaultTemplate);
+  const [task, setTask] = useState(pack.agentsMD.exampleTasks[0]);
+
+  // Reset content when audience pack changes
+  useEffect(() => {
+    setAgentsMd(pack.agentsMD.defaultTemplate);
+    setTask(pack.agentsMD.exampleTasks[0]);
+  }, [packId]); // eslint-disable-line react-hooks/exhaustive-deps
   const [loadingRaw, setLoadingRaw] = useState(false);
   const [loadingWith, setLoadingWith] = useState(false);
   const [rawResponse, setRawResponse] = useState<string | null>(null);
@@ -370,7 +330,7 @@ export function AgentsMD() {
             <div>
               <p className="text-xs text-gray-600 uppercase tracking-wider font-mono mb-2">Example tasks</p>
               <div className="space-y-2">
-                {EXAMPLE_TASKS.map(t => (
+                {pack.agentsMD.exampleTasks.map(t => (
                   <button
                     key={t}
                     onClick={() => handleRun(t)}

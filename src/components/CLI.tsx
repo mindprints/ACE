@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Terminal, ChevronRight, Loader2, AlertCircle, Command, Sparkles, RotateCcw } from 'lucide-react';
 import { fetchOpenRouterChat } from '../services/openRouter';
 import { cn } from './Layout';
+import { useContentPack } from '../context/ContentPackContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -11,72 +12,32 @@ interface LogEntry {
   content: string;
 }
 
-// ─── Simulated filesystem context sent to the model ──────────────────────────
-// This gives the "output simulator" enough context to produce realistic responses.
-
-const SIMULATED_ENV = `
-You are simulating a bash terminal running inside a TypeScript/Node.js project.
-The project structure is:
-  /project/
-    package.json         (name: "myapp", scripts: dev/build/test, deps: express, bcrypt, pg)
-    tsconfig.json
-    src/
-      index.ts           (Express server entry, port 3000)
-      auth/
-        login.ts         (bcrypt login, returns JWT)
-        session.ts       (Redis-backed sessions, 7-day TTL)
-        passwordReset.ts (email token flow, 1hr TTL)
-      db/
-        client.ts        (pg Pool, max 20 connections)
-        migrations/
-          001_init.sql
-          002_sessions.sql
-      api/
-        routes/
-          users.ts       (POST /login, POST /logout, GET /me)
-          posts.ts       (CRUD, requires auth middleware)
-      middleware/
-        rateLimit.ts     (5 attempts / 15min for login, 100/min general)
-        auth.ts          (JWT verify middleware)
-    tests/
-      auth.test.ts
-      users.test.ts
-    .env                 (DATABASE_URL, REDIS_URL, JWT_SECRET)
-    README.md
-    node_modules/        (installed)
-
-Current directory: /project
-Git: on branch main, clean working tree, 14 commits
-Node: v20.11.0, npm: 10.2.4
-`.trim();
-
-// ─── Example commands ─────────────────────────────────────────────────────────
-
-const EXAMPLES = [
-  'Find all TODO comments in the src folder',
-  'Show me the git log for the last 5 commits',
-  'Count lines of TypeScript code in src/',
-  'List all npm scripts in package.json',
-  'Find which files import from the db/client module',
-  'Show all files modified in the last 24 hours',
-  'Check if there are any unused imports in auth/',
-  'Create a summary of the project structure',
-];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function CLI() {
-  const [input, setInput] = useState('');
-  const [logs, setLogs] = useState<LogEntry[]>([
-    { id: 'init1', type: 'system', content: '─── AI CLI Agent v1.0 ───────────────────────────────' },
-    { id: 'init2', type: 'system', content: 'Type a natural language goal. The agent will plan and execute bash commands.' },
-    { id: 'init3', type: 'system', content: 'Running inside: /project (simulated TypeScript/Node.js app)' },
+function makeInitLogs(envLabel: string): LogEntry[] {
+  return [
+    { id: 'init1', type: 'system', content: '─── AI Agent v1.0 ───────────────────────────────' },
+    { id: 'init2', type: 'system', content: 'Type a natural language goal. The agent will plan and execute steps.' },
+    { id: 'init3', type: 'system', content: `Running inside: ${envLabel}` },
     { id: 'init4', type: 'divider', content: '' },
-  ]);
+  ];
+}
+
+export function CLI() {
+  const { pack, packId } = useContentPack();
+  const [input, setInput] = useState('');
+  const [logs, setLogs] = useState<LogEntry[]>(() => makeInitLogs(pack.cli.envLabel));
   const [isExecuting, setIsExecuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset terminal when audience pack changes
+  useEffect(() => {
+    setLogs(makeInitLogs(pack.cli.envLabel));
+    setInput('');
+  }, [packId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -111,7 +72,7 @@ export function CLI() {
 
       const planMessages = [
         {
-          role: 'system',
+          role: 'system' as const,
           content: `You are an AI CLI agent (like Claude Code or Aider). The user gives you a natural language goal.
 First, briefly explain your plan in 1-2 sentences (what you'll do and why).
 Then output a JSON array of 1-4 bash commands to achieve the goal.
@@ -120,9 +81,9 @@ Format your response EXACTLY like this — no markdown, no code fences:
 PLAN: <one or two sentence explanation>
 COMMANDS: ["cmd1", "cmd2"]
 
-${SIMULATED_ENV}`
+${pack.cli.simulatedEnv}`
         },
-        { role: 'user', content: userCommand }
+        { role: 'user' as const, content: userCommand }
       ];
 
       const planResponse = await fetchOpenRouterChat(planMessages, model, apiKey);
@@ -175,16 +136,16 @@ ${SIMULATED_ENV}`
         // Ask the model to simulate realistic terminal output for this command
         const outputMessages = [
           {
-            role: 'system',
+            role: 'system' as const,
             content: `You are simulating the stdout/stderr output of a bash command running in a specific project.
 Return ONLY the raw terminal output — no explanation, no markdown, no code fences.
 If the command would produce no output (like cd, mkdir), return a single blank line.
 Keep output concise and realistic (max 15 lines).
 
-${SIMULATED_ENV}`
+${pack.cli.simulatedEnv}`
           },
           {
-            role: 'user',
+            role: 'user' as const,
             content: `Simulate the terminal output of this command:\n${cmd}`
           }
         ];
@@ -320,7 +281,7 @@ ${SIMULATED_ENV}`
 
       {/* Example chips */}
       <div className="flex-shrink-0 flex flex-wrap gap-2">
-        {EXAMPLES.map(ex => (
+        {pack.cli.examples.map(ex => (
           <button
             key={ex}
             onClick={() => handleCommand(ex)}
