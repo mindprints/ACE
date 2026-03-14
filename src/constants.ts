@@ -1,6 +1,6 @@
 import { Chapter } from './types';
 
-export const CURRICULUM: Chapter[] = [
+export const DEVELOPER_CURRICULUM: Chapter[] = [
   {
     id: 'timeline',
     title: 'The Ecosystem Timeline',
@@ -71,6 +71,78 @@ export const CURRICULUM: Chapter[] = [
     id: 'ide-evolution',
     title: '10. IDE Evolution',
     description: 'The progression of AI in the editor, from autocomplete to agents.',
+    type: 'interactive'
+  },
+];
+
+// Alias kept for any legacy imports
+export const CURRICULUM = DEVELOPER_CURRICULUM;
+
+export const GENERALIST_CURRICULUM: Chapter[] = [
+  {
+    id: 'timeline',
+    title: 'The Ecosystem Timeline',
+    description: 'How AI evolved from a coder\'s tool into an assistant for everyone.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-setup',
+    title: 'Setup',
+    description: 'Configure your API key to enable live demonstrations.',
+    type: 'config'
+  },
+  {
+    id: 'g-basics',
+    title: '1. Your AI Advisors',
+    description: 'Different AI models have different strengths. Compare them on real everyday tasks.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-tools',
+    title: '2. AI That Looks Things Up',
+    description: 'How AI moves beyond stored knowledge to find, calculate, and verify in real time.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-connectors',
+    title: '3. Connect Your World',
+    description: 'How AI plugs into the apps and data sources you already use.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-teach',
+    title: '4. Teach It Your Way',
+    description: 'Give AI the context of your domain so it becomes an expert in your world.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-brief',
+    title: '5. Brief Your Assistant',
+    description: 'How to set up an AI agent with the right goals, guardrails, and expectations.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-delegate',
+    title: '6. Just Say It',
+    description: 'Natural language is the new interface. Describe what you want — AI handles the how.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-research',
+    title: '7. AI Does the Legwork',
+    description: 'Agents that browse, gather, compare, and synthesize information on your behalf.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-teams',
+    title: '8. AI Teams at Work',
+    description: 'Specialist agents working in parallel — each doing what it does best.',
+    type: 'interactive'
+  },
+  {
+    id: 'g-evolution',
+    title: '9. The New Way of Working',
+    description: 'How workflows are evolving — from manual to AI-augmented to fully delegated.',
     type: 'interactive'
   },
 ];
