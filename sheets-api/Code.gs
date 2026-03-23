@@ -26,7 +26,7 @@ function setup() {
   const ss = getSpreadsheet();
   ensureSheet(ss, 'Assignments', ['id', 'title', 'description', 'dueDate', 'createdAt']);
   ensureSheet(ss, 'Links',       ['id', 'title', 'url', 'description', 'createdAt']);
-  SpreadsheetApp.getUi().alert('Sheets ready!');
+  Logger.log('Sheets ready!');
 }
 
 function ensureSheet(ss, name, headers) {
