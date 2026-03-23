@@ -1,6 +1,8 @@
 // ACE — Assignments & Links API
-// Paste this into Google Apps Script (script.google.com), bound to your spreadsheet.
-// The spreadsheet needs two sheets named exactly: "Assignments" and "Links"
+// Works as either a standalone script OR bound to a spreadsheet.
+//
+// If standalone: paste your Google Sheet ID below (the long string in the Sheet URL).
+// If bound (created via Extensions > Apps Script inside the sheet): leave SHEET_ID as ''.
 //
 // Sheet columns:
 //   Assignments: id | title | description | dueDate | createdAt
@@ -12,8 +14,16 @@
 //   Who has access: Anyone
 // Copy the Web App URL into your Vercel env var: VITE_SHEETS_API_URL
 
+const SHEET_ID = ''; // ← paste your Spreadsheet ID here if using a standalone script
+
+function getSpreadsheet() {
+  return SHEET_ID
+    ? SpreadsheetApp.openById(SHEET_ID)
+    : SpreadsheetApp.getActiveSpreadsheet();
+}
+
 function setup() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   ensureSheet(ss, 'Assignments', ['id', 'title', 'description', 'dueDate', 'createdAt']);
   ensureSheet(ss, 'Links',       ['id', 'title', 'url', 'description', 'createdAt']);
   SpreadsheetApp.getUi().alert('Sheets ready!');
@@ -27,7 +37,7 @@ function ensureSheet(ss, name, headers) {
 
 // All reads and writes come in as GET requests to avoid the POST-redirect CORS issue.
 function doGet(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const action = (e.parameter.action || 'list');
 
   if (action === 'list') {
