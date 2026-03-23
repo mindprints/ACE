@@ -19,11 +19,8 @@ interface ResourceLink {
 
 type Tab = 'assignments' | 'links';
 
-const API = (import.meta as any).env?.VITE_SHEETS_API_URL as string | undefined;
-
 function apiCall(params: Record<string, string>) {
-  if (!API) return Promise.resolve(null);
-  const url = new URL(API);
+  const url = new URL('/api/sheets', window.location.origin);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   return fetch(url.toString()).then(r => r.json()).catch(() => null);
 }
@@ -32,7 +29,7 @@ export function Assignments() {
   const [tab, setTab] = useState<Tab>('assignments');
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [links, setLinks] = useState<ResourceLink[]>([]);
-  const [loading, setLoading] = useState(!!API);
+  const [loading, setLoading] = useState(true);
 
   // Assignment form state
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
@@ -47,7 +44,6 @@ export function Assignments() {
   const [lDesc, setLDesc] = useState('');
 
   useEffect(() => {
-    if (!API) return;
     apiCall({ action: 'list' }).then(data => {
       if (data) {
         setAssignments(data.assignments ?? []);
