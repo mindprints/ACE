@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, ExternalLink, ClipboardList, Link2, X } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, ClipboardList, Link2, X, Loader2 } from 'lucide-react';
 
 interface Assignment {
   id: string;
@@ -19,30 +19,20 @@ interface ResourceLink {
 
 type Tab = 'assignments' | 'links';
 
-const STORAGE_KEY_ASSIGNMENTS = 'ace_assignments';
-const STORAGE_KEY_LINKS = 'ace_links';
+const API = (import.meta as any).env?.VITE_SHEETS_API_URL as string | undefined;
 
-function load<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function save<T>(key: string, value: T) {
-  localStorage.setItem(key, JSON.stringify(value));
+function apiCall(params: Record<string, string>) {
+  if (!API) return Promise.resolve(null);
+  const url = new URL(API);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  return fetch(url.toString()).then(r => r.json()).catch(() => null);
 }
 
 export function Assignments() {
   const [tab, setTab] = useState<Tab>('assignments');
-  const [assignments, setAssignments] = useState<Assignment[]>(() =>
-    load(STORAGE_KEY_ASSIGNMENTS, [])
-  );
-  const [links, setLinks] = useState<ResourceLink[]>(() =>
-    load(STORAGE_KEY_LINKS, [])
-  );
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [links, setLinks] = useState<ResourceLink[]>([]);
+  const [loading, setLoading] = useState(!!API);
 
   // Assignment form state
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
@@ -56,41 +46,57 @@ export function Assignments() {
   const [lUrl, setLUrl] = useState('');
   const [lDesc, setLDesc] = useState('');
 
-  useEffect(() => { save(STORAGE_KEY_ASSIGNMENTS, assignments); }, [assignments]);
-  useEffect(() => { save(STORAGE_KEY_LINKS, links); }, [links]);
+  useEffect(() => {
+    if (!API) return;
+    apiCall({ action: 'list' }).then(data => {
+      if (data) {
+        setAssignments(data.assignments ?? []);
+        setLinks(data.links ?? []);
+      }
+      setLoading(false);
+    });
+  }, []);
 
   const addAssignment = () => {
     if (!aTitle.trim()) return;
-    setAssignments(prev => [{
+    const item: Assignment = {
       id: crypto.randomUUID(),
       title: aTitle.trim(),
       description: aDesc.trim(),
       dueDate: aDue,
       createdAt: new Date().toISOString(),
-    }, ...prev]);
+    };
+    setAssignments(prev => [item, ...prev]);
     setATitle(''); setADesc(''); setADue('');
     setShowAssignmentForm(false);
+    apiCall({ action: 'add', type: 'assignments', data: encodeURIComponent(JSON.stringify(item)) });
   };
 
-  const deleteAssignment = (id: string) =>
+  const deleteAssignment = (id: string) => {
     setAssignments(prev => prev.filter(a => a.id !== id));
+    apiCall({ action: 'delete', type: 'assignments', id });
+  };
 
   const addLink = () => {
     if (!lTitle.trim() || !lUrl.trim()) return;
     const url = lUrl.trim().startsWith('http') ? lUrl.trim() : `https://${lUrl.trim()}`;
-    setLinks(prev => [{
+    const item: ResourceLink = {
       id: crypto.randomUUID(),
       title: lTitle.trim(),
       url,
       description: lDesc.trim(),
       createdAt: new Date().toISOString(),
-    }, ...prev]);
+    };
+    setLinks(prev => [item, ...prev]);
     setLTitle(''); setLUrl(''); setLDesc('');
     setShowLinkForm(false);
+    apiCall({ action: 'add', type: 'links', data: encodeURIComponent(JSON.stringify(item)) });
   };
 
-  const deleteLink = (id: string) =>
+  const deleteLink = (id: string) => {
     setLinks(prev => prev.filter(l => l.id !== id));
+    apiCall({ action: 'delete', type: 'links', id });
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -100,6 +106,7 @@ export function Assignments() {
           <h1 className="text-2xl font-semibold text-white">Assignments &amp; Links</h1>
           <p className="text-sm text-gray-500 mt-1">Post tasks and resources for your pupils</p>
         </div>
+        {loading && <Loader2 className="w-4 h-4 text-gray-600 animate-spin" />}
       </div>
 
       {/* Tab bar */}
@@ -142,7 +149,6 @@ export function Assignments() {
       <div className="flex-1 overflow-y-auto px-8 py-6">
         {tab === 'assignments' && (
           <div className="max-w-2xl space-y-4">
-            {/* Add button */}
             {!showAssignmentForm ? (
               <button
                 onClick={() => setShowAssignmentForm(true)}
@@ -195,17 +201,13 @@ export function Assignments() {
               </div>
             )}
 
-            {/* Assignment list */}
-            {assignments.length === 0 && !showAssignmentForm && (
+            {assignments.length === 0 && !showAssignmentForm && !loading && (
               <div className="text-center py-16 text-gray-600 text-sm">
                 No assignments yet. Add one above.
               </div>
             )}
             {assignments.map(a => (
-              <div
-                key={a.id}
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 group"
-              >
+              <div key={a.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 group">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-white font-medium text-base leading-snug">{a.title}</h3>
@@ -238,7 +240,6 @@ export function Assignments() {
 
         {tab === 'links' && (
           <div className="max-w-2xl space-y-4">
-            {/* Add button */}
             {!showLinkForm ? (
               <button
                 onClick={() => setShowLinkForm(true)}
@@ -289,17 +290,13 @@ export function Assignments() {
               </div>
             )}
 
-            {/* Link list */}
-            {links.length === 0 && !showLinkForm && (
+            {links.length === 0 && !showLinkForm && !loading && (
               <div className="text-center py-16 text-gray-600 text-sm">
                 No links yet. Add one above.
               </div>
             )}
             {links.map(l => (
-              <div
-                key={l.id}
-                className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 group"
-              >
+              <div key={l.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 group">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <a
