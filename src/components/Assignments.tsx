@@ -19,16 +19,25 @@ interface ResourceLink {
 
 type Tab = 'assignments' | 'links';
 
+const CACHE_KEY = 'ace_sheets_cache';
+
 function apiCall(params: Record<string, string>) {
   const url = new URL('/api/sheets', window.location.origin);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   return fetch(url.toString()).then(r => r.json()).catch(() => null);
 }
 
+function readCache(): { assignments: Assignment[]; links: ResourceLink[] } | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export function Assignments() {
   const [tab, setTab] = useState<Tab>('assignments');
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [links, setLinks] = useState<ResourceLink[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>(() => readCache()?.assignments ?? []);
+  const [links, setLinks] = useState<ResourceLink[]>(() => readCache()?.links ?? []);
   const [loading, setLoading] = useState(true);
 
   // Assignment form state
@@ -45,9 +54,10 @@ export function Assignments() {
 
   useEffect(() => {
     apiCall({ action: 'list' }).then(data => {
-      if (data) {
+      if (data && !data.error) {
         setAssignments(data.assignments ?? []);
         setLinks(data.links ?? []);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
       }
       setLoading(false);
     });
