@@ -21,6 +21,7 @@ import { GeneralistDelegate } from './components/generalist/GeneralistDelegate';
 import { GeneralistResearch } from './components/generalist/GeneralistResearch';
 import { GeneralistTeams } from './components/generalist/GeneralistTeams';
 import { GeneralistEvolution } from './components/generalist/GeneralistEvolution';
+import { Assignments } from './components/Assignments';
 import { DEVELOPER_CURRICULUM, GENERALIST_CURRICULUM } from './constants';
 
 export default function App() {
@@ -81,7 +82,11 @@ export default function App() {
       onChapterSelect={handleChapterSelect}
       onThreadSelect={handleThreadSelect}
     >
-      {activeThread === 'developer' ? renderDeveloperContent() : renderGeneralistContent()}
+      {activeThread === 'assignments'
+        ? <Assignments />
+        : activeThread === 'developer'
+          ? renderDeveloperContent()
+          : renderGeneralistContent()}
     </Layout>
   );
 }
