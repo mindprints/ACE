@@ -65,7 +65,7 @@ export function Assignments() {
     setAssignments(prev => [item, ...prev]);
     setATitle(''); setADesc(''); setADue('');
     setShowAssignmentForm(false);
-    apiCall({ action: 'add', type: 'assignments', data: encodeURIComponent(JSON.stringify(item)) });
+    apiCall({ action: 'add', type: 'assignments', data: JSON.stringify(item) });
   };
 
   const deleteAssignment = (id: string) => {
@@ -86,7 +86,7 @@ export function Assignments() {
     setLinks(prev => [item, ...prev]);
     setLTitle(''); setLUrl(''); setLDesc('');
     setShowLinkForm(false);
-    apiCall({ action: 'add', type: 'links', data: encodeURIComponent(JSON.stringify(item)) });
+    apiCall({ action: 'add', type: 'links', data: JSON.stringify(item) });
   };
 
   const deleteLink = (id: string) => {

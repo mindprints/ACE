@@ -48,7 +48,7 @@ function doGet(e) {
 
   if (action === 'add') {
     const type = e.parameter.type;
-    const data = JSON.parse(decodeURIComponent(e.parameter.data));
+    const data = JSON.parse(e.parameter.data);
     const sheet = ss.getSheetByName(type === 'assignments' ? 'Assignments' : 'Links');
     if (type === 'assignments') {
       sheet.appendRow([data.id, data.title, data.description, data.dueDate, data.createdAt]);
