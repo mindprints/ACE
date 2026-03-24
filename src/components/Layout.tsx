@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DEVELOPER_CURRICULUM, GENERALIST_CURRICULUM } from '../constants';
-import { BookOpen, Settings, Terminal, Cpu, Network, Wrench, LayoutTemplate, Search, Code2, Users, ClipboardList } from 'lucide-react';
+import { BookOpen, Settings, Terminal, Cpu, Network, Wrench, LayoutTemplate, Search, Code2, Users, ClipboardList, Menu, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -43,6 +43,8 @@ interface LayoutProps {
 }
 
 export function Layout({ children, activeChapterId, activeThread, onChapterSelect, onThreadSelect }: LayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const curriculum = activeThread === 'developer' ? DEVELOPER_CURRICULUM : GENERALIST_CURRICULUM;
   const icons = activeThread === 'developer' ? DEV_ICONS : GEN_ICONS;
   const accent = activeThread === 'developer' ? 'text-emerald-400' : 'text-violet-400';
@@ -50,20 +52,52 @@ export function Layout({ children, activeChapterId, activeThread, onChapterSelec
     ? 'bg-emerald-600 text-white'
     : 'bg-violet-600 text-white';
 
+  const handleChapterSelect = (id: string) => {
+    onChapterSelect(id);
+    setSidebarOpen(false);
+  };
+
+  const handleThreadSelect = (thread: Thread) => {
+    onThreadSelect(thread);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="flex h-screen bg-[#0a0a0a] text-gray-300 font-sans overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-72 border-r border-white/10 bg-[#121212] flex flex-col">
+
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — fixed drawer on mobile, static column on desktop */}
+      <div className={cn(
+        "fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-[#121212] flex flex-col transition-transform duration-200",
+        "md:static md:translate-x-0 md:z-auto",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
         <div className="p-5 border-b border-white/10 space-y-4">
-          <div>
-            <h1 className="text-lg font-semibold text-white tracking-tight">AI Evolution</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Interactive Curriculum</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-white tracking-tight">AI Evolution</h1>
+              <p className="text-xs text-gray-500 mt-0.5">Interactive Curriculum</p>
+            </div>
+            {/* Close button — mobile only */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden text-gray-500 hover:text-gray-300 p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Thread toggle — hidden on assignments view */}
           <div className={cn("flex rounded-lg bg-black/40 border border-white/10 p-0.5 gap-0.5", activeThread === 'assignments' && "opacity-40 pointer-events-none")}>
             <button
-              onClick={() => onThreadSelect('developer')}
+              onClick={() => handleThreadSelect('developer')}
               className={cn(
                 'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-colors',
                 activeThread === 'developer' ? activeTabStyle : 'text-gray-500 hover:text-gray-300'
@@ -73,7 +107,7 @@ export function Layout({ children, activeChapterId, activeThread, onChapterSelec
               Developer
             </button>
             <button
-              onClick={() => onThreadSelect('generalist')}
+              onClick={() => handleThreadSelect('generalist')}
               className={cn(
                 'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-colors',
                 activeThread === 'generalist'
@@ -97,7 +131,7 @@ export function Layout({ children, activeChapterId, activeThread, onChapterSelec
                 return (
                   <button
                     key={chapter.id}
-                    onClick={() => onChapterSelect(chapter.id)}
+                    onClick={() => handleChapterSelect(chapter.id)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
                       isActive
@@ -117,7 +151,7 @@ export function Layout({ children, activeChapterId, activeThread, onChapterSelec
         {/* Assignments link */}
         <div className="px-3 py-3 border-t border-white/10">
           <button
-            onClick={() => onThreadSelect('assignments')}
+            onClick={() => handleThreadSelect('assignments')}
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
               activeThread === 'assignments'
@@ -132,7 +166,17 @@ export function Layout({ children, activeChapterId, activeThread, onChapterSelec
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#0a0a0a]">
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#0a0a0a] min-w-0">
+        {/* Mobile top bar with hamburger */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-white/10 flex-shrink-0">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <span className="text-sm font-medium text-white">AI Evolution</span>
+        </div>
         {children}
       </main>
     </div>
