@@ -188,16 +188,17 @@ export function Assignments() {
                 />
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-xs text-gray-500 block mb-1">Difficulty (optional)</label>
+                    <label className="text-xs text-gray-500 block mb-1">Points (optional)</label>
                     <select
                       value={aDifficulty}
                       onChange={e => setADifficulty(e.target.value)}
                       className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50 [color-scheme:dark]"
                     >
                       <option value="">— select —</option>
-                      <option value="Beginner">Beginner</option>
-                      <option value="Intermediate">Intermediate</option>
-                      <option value="Advanced">Advanced</option>
+                      <option value="10">10 pts</option>
+                      <option value="20">20 pts</option>
+                      <option value="30">30 pts</option>
+                      <option value="40">40 pts</option>
                     </select>
                   </div>
                   <button
@@ -226,12 +227,8 @@ export function Assignments() {
                     )}
                     <div className="flex items-center gap-3 mt-3">
                       {a.difficulty && (
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                          a.difficulty === 'Beginner'     ? 'text-emerald-400/80 bg-emerald-500/10 border-emerald-500/20' :
-                          a.difficulty === 'Intermediate' ? 'text-amber-400/80 bg-amber-500/10 border-amber-500/20' :
-                                                            'text-red-400/80 bg-red-500/10 border-red-500/20'
-                        }`}>
-                          {a.difficulty}
+                        <span className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                          {a.difficulty} pts
                         </span>
                       )}
                       <span className="text-xs text-gray-600">
