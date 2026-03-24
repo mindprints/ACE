@@ -5,7 +5,7 @@ interface Assignment {
   id: string;
   title: string;
   description: string;
-  dueDate: string;
+  difficulty: string;
   createdAt: string;
 }
 
@@ -44,7 +44,7 @@ export function Assignments() {
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const [aTitle, setATitle] = useState('');
   const [aDesc, setADesc] = useState('');
-  const [aDue, setADue] = useState('');
+  const [aDifficulty, setADifficulty] = useState('');
 
   // Link form state
   const [showLinkForm, setShowLinkForm] = useState(false);
@@ -69,11 +69,11 @@ export function Assignments() {
       id: crypto.randomUUID(),
       title: aTitle.trim(),
       description: aDesc.trim(),
-      dueDate: aDue,
+      difficulty: aDifficulty,
       createdAt: new Date().toISOString(),
     };
     setAssignments(prev => [item, ...prev]);
-    setATitle(''); setADesc(''); setADue('');
+    setATitle(''); setADesc(''); setADifficulty('');
     setShowAssignmentForm(false);
     apiCall({ action: 'add', type: 'assignments', data: JSON.stringify(item) });
   };
@@ -188,13 +188,17 @@ export function Assignments() {
                 />
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-xs text-gray-500 block mb-1">Due date (optional)</label>
-                    <input
-                      type="date"
-                      value={aDue}
-                      onChange={e => setADue(e.target.value)}
+                    <label className="text-xs text-gray-500 block mb-1">Difficulty (optional)</label>
+                    <select
+                      value={aDifficulty}
+                      onChange={e => setADifficulty(e.target.value)}
                       className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50 [color-scheme:dark]"
-                    />
+                    >
+                      <option value="">— select —</option>
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                    </select>
                   </div>
                   <button
                     onClick={addAssignment}
@@ -221,9 +225,13 @@ export function Assignments() {
                       <p className="text-gray-400 text-sm mt-1.5 whitespace-pre-wrap leading-relaxed">{a.description}</p>
                     )}
                     <div className="flex items-center gap-3 mt-3">
-                      {a.dueDate && (
-                        <span className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                          Due {new Date(a.dueDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {a.difficulty && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                          a.difficulty === 'Beginner'     ? 'text-emerald-400/80 bg-emerald-500/10 border-emerald-500/20' :
+                          a.difficulty === 'Intermediate' ? 'text-amber-400/80 bg-amber-500/10 border-amber-500/20' :
+                                                            'text-red-400/80 bg-red-500/10 border-red-500/20'
+                        }`}>
+                          {a.difficulty}
                         </span>
                       )}
                       <span className="text-xs text-gray-600">
