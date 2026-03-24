@@ -340,6 +340,7 @@ export function Assignments() {
                   </span>
                 </div>
               ))}
+            </div>
           </div>
         )}
       </div>
