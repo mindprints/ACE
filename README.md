@@ -1,96 +1,156 @@
-# 🤖 AI Agent Patterns & Skills Demo
+# AI Evolution — Interactive Curriculum (ACE)
 
-A comprehensive React application demonstrating advanced AI agent capabilities, including project-specific skills (`SKILL.md`), project onboarding (`AGENTS.md`), Retrieval-Augmented Generation (RAG) for codebases, Tool Calling, Model Context Protocol (MCP), and Multi-Agent Platforms.
+A mobile-responsive, teacher-facing React application that delivers two parallel AI curriculum tracks — **Developer** and **Generalist** — and provides live classroom tools for posting assignments and sharing resource links backed by Google Sheets.
 
-This project serves as an interactive curriculum, playground, and educational tool for understanding how to ground Large Language Models (LLMs) in specific project contexts, utilize tools, and orchestrate multiple agents to produce more accurate, secure, and idiomatic code.
+**Live:** [https://ace-umber-eight.vercel.app](https://ace-umber-eight.vercel.app)
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
 
-## ✨ Curriculum & Core Features
+---
 
-### 1. Basic Capabilities (`/src/components/ModelComparison.tsx`)
-Compare raw model outputs across different open and closed-weight models.
-- **Model Comparison:** Test prompts against various leading models (GPT-4o, Claude 3.5 Sonnet, Llama 3.3, Gemini 2.5 Pro, DeepSeek V3.2, etc.).
+## Curriculum Tracks
 
-### 2. Scaffolds & Harnesses (`/src/components/Scaffolds.tsx`)
-Shows how Retrieval-Augmented Generation (RAG) can dramatically improve AI code generation by providing existing codebase context, similar to how IDEs like Cursor and Windsurf integrate AI.
-- **Simulated Codebase:** A mock file system containing standard project files.
-- **Contextual Generation:** The AI uses retrieved snippets to generate code that matches the existing project architecture.
+### Developer Track
+| Module | Component | Description |
+|--------|-----------|-------------|
+| Timeline | `Timeline.tsx` | Visual history of AI milestones |
+| Setup | `Setup.tsx` | Environment configuration & OpenRouter key |
+| Basic Capabilities | `ModelComparison.tsx` | Compare raw output across GPT-4o, Claude, Llama, Gemini, DeepSeek |
+| Scaffolds & RAG | `Scaffolds.tsx` | Retrieval-Augmented Generation against a simulated codebase |
+| Tool Calling | `ToolCalling.tsx` | Function-calling & real-time data fetching |
+| MCP | `MCP.tsx` | Model Context Protocol — local files, DBs, and APIs |
+| Skills | `Agents.tsx` | Injecting domain expertise via `SKILL.md` files |
+| Agents & AGENTS.md | `AgentsMD.tsx` | Onboarding AI agents with project-specific rules |
+| CLI Renaissance | `CLI.tsx` | Natural-language terminal interface with command planning |
+| Multi-Agent | `MultiAgent.tsx` | Orchestrating Planner → Coder → Reviewer pipelines |
+| Browser Use | `Browseruse.tsx` | AI-driven browser automation |
+| IDE Evolution | `Ideevolution.tsx` | How IDEs have evolved around AI assistance |
 
-### 3. Tool Calling & Search (`/src/components/ToolCalling.tsx`)
-Explore how models interact with the outside world using tools and web search.
-- **Function Calling:** Demonstrates how LLMs can execute predefined functions to fetch real-time data or perform actions.
+### Generalist Track
+| Module | Component | Description |
+|--------|-----------|-------------|
+| Setup | `GeneralistBasics.tsx` | Getting started without coding |
+| Basic AI Use | `GeneralistBasics.tsx` | Core prompting and model selection |
+| Tools | `GeneralistTools.tsx` | Consumer AI tools landscape |
+| Connectors | `GeneralistConnectors.tsx` | Integrating AI into existing workflows |
+| Teaching AI | `GeneralistTeach.tsx` | Using AI in education contexts |
+| Briefing | `GeneralistBrief.tsx` | Writing effective briefs for AI |
+| Delegation | `GeneralistDelegate.tsx` | Delegating tasks to AI agents |
+| Research | `GeneralistResearch.tsx` | AI-assisted research techniques |
+| Teams | `GeneralistTeams.tsx` | Running AI-augmented teams |
+| AI Evolution | `GeneralistEvolution.tsx` | Where AI is heading |
 
-### 4. Model Context Protocol (MCP) (`/src/components/MCP.tsx`)
-Learn about standardizing how models access context and local resources.
-- **Resource Integration:** Shows how MCP provides a unified way for AI models to securely interact with local files, databases, and APIs.
+---
 
-### 5. Skills (`/src/components/Agents.tsx`)
-Demonstrates the concept of injecting domain-specific expertise into AI agents.
-- **Reusable `SKILL.md` Files:** Teach agents specific conventions (e.g., `react-component`, `api-service`).
-- **Skill Matching:** Automatically detects required skills based on the user's prompt.
+## Classroom Tools — Assignments & Links
 
-### 6. Agents & `AGENTS.md` (`/src/components/AgentsMD.tsx`)
-The open standard for briefing AI coding agents on your project.
-- **Interactive `AGENTS.md` Editor:** Edit the project's AI onboarding guide (build commands, conventions, boundaries) in real-time.
-- **Side-by-Side Comparison:** Compare the output of a "Vanilla" AI agent against a "Context-Aware" agent loaded with your specific project rules.
+`src/components/Assignments.tsx` — a live teacher dashboard with two tabs:
 
-### 7. The CLI Renaissance (`/src/components/CLI.tsx`)
-An experimental natural language terminal interface.
-- **Command Planning:** The agent receives a natural language request and plans a sequence of bash commands.
-- **Simulated Execution:** Executes the planned commands in a mock terminal environment, providing realistic feedback.
+### Assignments tab
+- Add assignments with a **title**, **description**, and **points value** (10 / 20 / 30 / 40)
+- Assignments display in a responsive grid (1 → 2 → 3 columns)
+- Points badge colour-coded by band (amber = 40, blue = 30, green = 20, slate = 10)
+- Delete any assignment with a single click
 
-### 8. Multi-Agent Platforms (`/src/components/MultiAgent.tsx`)
-Orchestrating multiple specialized agents to solve complex problems.
-- **Agent Collaboration:** Demonstrates how different agents (e.g., Planner, Coder, Reviewer) can work together in a pipeline to accomplish a larger goal.
+### Links & Resources tab
+- Add resource links with a label, URL, and optional notes
+- Auto-prefixes `https://` if omitted
+- Opens in a new tab with an external-link icon
 
-## 🚀 Getting Started
+### Backend — Google Sheets via Apps Script
+All assignments and links are persisted in a Google Sheet through a published Apps Script web app. The Vercel API route `/api/sheets` proxies requests (add / delete / list) with `localStorage` caching for instant offline-first display.
+
+> To reconfigure the backing sheet, update `APPS_SCRIPT_URL` in `api/sheets.ts`.
+
+---
+
+## Mobile Layout
+
+The sidebar is a **collapsible drawer** on mobile (< 768 px):
+- A hamburger `☰` button appears in the top bar on small screens
+- Tapping it slides the sidebar in as a fixed overlay with a dimmed backdrop
+- Selecting any item auto-closes the drawer
+- Desktop layout is unchanged — the sidebar is always visible
+
+---
+
+## PDF Handout Generator
+
+`ace_assignments.py` (Python, root of repo) generates a printable A4 PDF:
+- QR code linking to the live app (top-right of page)
+- Student fill-in fields: Name / Class / Date
+- All 21 assignments grouped by points band with colour-coded headers
+- Each row has a **☐ checkbox** on the left and a **tick underline** on the right
+
+```bash
+pip install qrcode[pil] reportlab pillow
+python ace_assignments.py
+# Output: Desktop/ACE_Assignments.pdf
+```
+
+---
+
+## Getting Started
 
 ### Prerequisites
-- Node.js (v18 or higher recommended)
-- npm or yarn
+- Node.js v18+
+- npm
 
-### Installation
+### Install & run locally
+```bash
+git clone https://github.com/mindprints/ACE.git
+cd ACE
+npm install
+npm run dev
+```
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
+### API key
+The app uses the **OpenRouter API**. On first run, go to **Setup** and enter your key — it is saved to `localStorage` under `openrouter_api_key`.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+---
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+## Tech Stack
 
-### Configuration
-This application uses the **OpenRouter API** to interact with LLMs. 
-- You will need an OpenRouter API key.
-- The application expects the key to be stored in your browser's `localStorage` under the key `openrouter_api_key`. The UI typically prompts for this in the Setup section when you attempt to run an AI task.
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, TypeScript, Vite |
+| Styling | Tailwind CSS |
+| Icons | Lucide React |
+| Markdown | React Markdown |
+| AI Gateway | OpenRouter API |
+| Persistence | Google Sheets via Apps Script |
+| Hosting | Vercel (auto-deploy on merge to `main`) |
+| PDF generation | ReportLab + qrcode (Python) |
 
-## 🧠 Concepts Explained
+---
 
-### What is `AGENTS.md` vs `SKILL.md`?
-- **`AGENTS.md`**: Just as `README.md` is for human developers, `AGENTS.md` is an onboarding file specifically designed for AI coding assistants. It defines project architecture, coding conventions, and boundaries (what the AI should *never* do).
-- **`SKILL.md`**: Modular, reusable files that teach an agent a specific skill (e.g., how to write a React component using Tailwind, or how to interact with a specific database).
+## Project Structure
 
-### Why RAG for Code?
-Standard LLMs are trained on public data up to a certain cutoff date. They don't know about *your* specific internal utility functions, custom React hooks, or database schemas. By using RAG, we search your codebase for relevant files and inject them into the LLM's prompt, ensuring the generated code uses your existing tools rather than hallucinating new ones.
+```
+ACE/
+├── api/
+│   └── sheets.ts           # Vercel serverless proxy to Apps Script
+├── src/
+│   ├── App.tsx             # Root — routing between threads & chapters
+│   ├── constants.ts        # Curriculum chapter definitions
+│   ├── components/
+│   │   ├── Layout.tsx      # Sidebar + mobile hamburger drawer
+│   │   ├── Assignments.tsx # Live assignments & links dashboard
+│   │   ├── Timeline.tsx
+│   │   ├── ModelComparison.tsx
+│   │   └── generalist/     # Generalist track modules
+│   └── context/
+│       └── ContentPackContext.tsx
+├── ace_assignments.py      # PDF handout generator
+└── README.md
+```
 
-## 🛠️ Tech Stack
-- **Frontend:** React 18, TypeScript, Vite
-- **Styling:** Tailwind CSS
-- **Icons:** Lucide React
-- **Markdown Rendering:** React Markdown
-- **AI Integration:** OpenRouter API (supports models like Claude 3.5 Sonnet, GPT-4o, DeepSeek, etc.)
+---
 
-## 📝 License
-This project is open-source and available under the MIT License.
+## License
+
+MIT — open source and free to use.
