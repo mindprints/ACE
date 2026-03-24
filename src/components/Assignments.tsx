@@ -154,7 +154,7 @@ export function Assignments() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-8 py-6">
         {tab === 'assignments' && (
-          <div className="max-w-2xl space-y-4">
+          <div className="space-y-4">
             {!showAssignmentForm ? (
               <button
                 onClick={() => setShowAssignmentForm(true)}
@@ -164,7 +164,7 @@ export function Assignments() {
                 Add assignment
               </button>
             ) : (
-              <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 space-y-3">
+              <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 space-y-3 max-w-lg">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-white">New Assignment</span>
                   <button onClick={() => setShowAssignmentForm(false)} className="text-gray-600 hover:text-gray-400">
@@ -217,40 +217,42 @@ export function Assignments() {
                 No assignments yet. Add one above.
               </div>
             )}
-            {assignments.map(a => (
-              <div key={a.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 group">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-medium text-base leading-snug">{a.title}</h3>
-                    {a.description && (
-                      <p className="text-gray-400 text-sm mt-1.5 whitespace-pre-wrap leading-relaxed">{a.description}</p>
-                    )}
-                    <div className="flex items-center gap-3 mt-3">
-                      {a.difficulty && (
-                        <span className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                          {a.difficulty} pts
-                        </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {assignments.map(a => (
+                <div key={a.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 group flex flex-col">
+                  <div className="flex items-start justify-between gap-3 flex-1">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-medium text-base leading-snug">{a.title}</h3>
+                      {a.description && (
+                        <p className="text-gray-400 text-sm mt-1.5 whitespace-pre-wrap leading-relaxed">{a.description}</p>
                       )}
-                      <span className="text-xs text-gray-600">
-                        Posted {new Date(a.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </span>
                     </div>
+                    <button
+                      onClick={() => deleteAssignment(a.id)}
+                      className="text-gray-700 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => deleteAssignment(a.id)}
-                    className="text-gray-700 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5">
+                    {a.difficulty && (
+                      <span className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                        {a.difficulty} pts
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-600">
+                      Posted {new Date(a.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
         {tab === 'links' && (
-          <div className="max-w-2xl space-y-4">
+          <div className="space-y-4">
             {!showLinkForm ? (
               <button
                 onClick={() => setShowLinkForm(true)}
@@ -260,7 +262,7 @@ export function Assignments() {
                 Add link
               </button>
             ) : (
-              <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 space-y-3">
+              <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 space-y-3 max-w-lg">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-white">New Link</span>
                   <button onClick={() => setShowLinkForm(false)} className="text-gray-600 hover:text-gray-400">
@@ -306,37 +308,38 @@ export function Assignments() {
                 No links yet. Add one above.
               </div>
             )}
-            {links.map(l => (
-              <div key={l.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 group">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <a
-                      href={l.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 font-medium text-base transition-colors"
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {links.map(l => (
+                <div key={l.id} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 group flex flex-col">
+                  <div className="flex items-start justify-between gap-3 flex-1">
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 font-medium text-base transition-colors"
+                      >
+                        {l.title}
+                        <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                      </a>
+                      <p className="text-gray-500 text-xs mt-0.5 truncate">{l.url}</p>
+                      {l.description && (
+                        <p className="text-gray-400 text-sm mt-2 leading-relaxed">{l.description}</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => deleteLink(l.id)}
+                      className="text-gray-700 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5"
+                      title="Delete"
                     >
-                      {l.title}
-                      <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
-                    </a>
-                    <p className="text-gray-500 text-xs mt-0.5 truncate">{l.url}</p>
-                    {l.description && (
-                      <p className="text-gray-400 text-sm mt-2 leading-relaxed">{l.description}</p>
-                    )}
-                    <span className="text-xs text-gray-600 mt-2 block">
-                      Posted {new Date(l.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </span>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => deleteLink(l.id)}
-                    className="text-gray-700 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <span className="text-xs text-gray-600 mt-3 pt-3 border-t border-white/5 block">
+                    Posted {new Date(l.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>
